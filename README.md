@@ -1,8 +1,20 @@
 # c-check
 
-A verification mod for Claude Code. It checks what Claude does. It blocks, warns, or sends Claude back when a rule fails.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Claude Code: v2.1.290+](https://img.shields.io/badge/Claude_Code-v2.1.290%2B-brightblue.svg)
+![Runtime dependencies: none](https://img.shields.io/badge/runtime_dependencies-none-brightgreen.svg)
 
-c-check answers one question: **"Can I trust what Claude just did?"** Rules are code, not text in `CLAUDE.md`. See [c-check-design.md](c-check-design.md) for the full design.
+Trust what [Claude Code](https://claude.com/claude-code) just did.
+
+c-check is a verification [mod](#install) that checks every edit, command and finish. It blocks, warns, or sends Claude back when a rule fails.
+Rules are code, not text in `CLAUDE.md`, so Claude cannot talk its way past them. No daemon, no build step. See [c-check-design.md](c-check-design.md) for the full design.
+
+```sh
+git clone https://github.com/pianburp/c-check.git
+claude --plugin-dir ./c-check
+```
+
+In the session, `/plugin` shows `1 mod active · c-check`. Without a config file, safe defaults apply.
 
 ## What it checks
 
@@ -111,3 +123,19 @@ evals/              sample repo and real task runs
 ```
 
 To add a rule, see [docs/writing-a-rule.md](docs/writing-a-rule.md).
+
+## Contributing
+
+Ground rules for PRs:
+
+- **No runtime dependencies.** Dev tools only (TypeScript, Vitest).
+- **Fail open.** A rule or adapter bug must never break Claude Code: the engine allows and logs.
+- **Silent when fine.** Claude reads what c-check prints, so print only on a failure.
+- **Never log contents.** Logs hold line numbers, file names and rule IDs, not file contents or secrets.
+- **Add a test.** Each rule gets a full-chain test in `tests/integration/`.
+
+Run `npm run typecheck && npm run test:unit` before you open a PR. Bug reports are most useful with your OS, Claude Code version, and the matching lines from `.c-check/logs/`.
+
+## License
+
+[MIT](LICENSE)
