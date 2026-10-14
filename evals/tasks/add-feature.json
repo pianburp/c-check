@@ -1,0 +1,6 @@
+{
+  "prompt": "Add and export a subtract(a, b) function in src/math.js. The multiply bug is known; fix it too so the tests pass.",
+  "expectCatch": false,
+  "check": ["node", "-e", "import('./src/math.js').then(m => process.exit(m.subtract(5, 3) === 2 ? 0 : 1))"],
+  "testsMustSurvive": 3
+}

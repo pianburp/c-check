@@ -1,0 +1,15 @@
+{
+  "session_id": "42f48076-6dba-4dd6-8e09-85f18dbf16ec",
+  "transcript_path": "{{TRANSCRIPT}}",
+  "cwd": "{{ROOT}}",
+  "prompt_id": "69a0c416-45da-4e90-ab3b-386bd7c91d49",
+  "permission_mode": "acceptEdits",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "Stop",
+  "stop_hook_active": false,
+  "last_assistant_message": "done\n\n`git status --short` showed `notes.txt` as changed and `a.txt` as new. It also listed a `.payloads/` folder that isn't tracked by git; I didn't create it.\n\nBesides your three tools, I used the step-list tool because this session needs it before any edit.",
+  "background_tasks": [],
+  "session_crons": []
+}

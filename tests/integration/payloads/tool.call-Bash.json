@@ -1,0 +1,6 @@
+{
+  "command": "git status --short",
+  "description": "Show short working tree status",
+  "tool": "Bash",
+  "tool_use_id": "toolu_016CVBt2YyYmij2xKCYVQ7ci"
+}

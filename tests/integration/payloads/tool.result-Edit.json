@@ -1,0 +1,25 @@
+{
+  "ref": 1,
+  "result": {
+    "filePath": "{{ROOT}}\\notes.txt",
+    "oldString": "first",
+    "newString": "second",
+    "originalFile": "first\n",
+    "structuredPatch": [
+      {
+        "oldStart": 1,
+        "oldLines": 1,
+        "newStart": 1,
+        "newLines": 1,
+        "lines": [
+          "-first",
+          "+second"
+        ]
+      }
+    ],
+    "userModified": false,
+    "replaceAll": false,
+    "contentNotInModelContext": true
+  },
+  "text": "The file {{ROOT}}\\notes.txt has been updated successfully."
+}

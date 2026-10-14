@@ -1,0 +1,26 @@
+{
+  "name": "c-check",
+  "version": "0.1.0",
+  "description": "A verification mod for Claude Code: checks what Claude does and blocks, warns, or sends Claude back when a rule fails.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "c-check": "src/cli/c-check.ts"
+  },
+  "scripts": {
+    "test": "vitest run && claude plugin test .",
+    "test:unit": "vitest run",
+    "test:mod": "claude plugin test .",
+    "typecheck": "tsc",
+    "validate": "claude plugin validate .",
+    "report": "node src/cli/c-check.ts report"
+  },
+  "engines": {
+    "node": ">=23.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

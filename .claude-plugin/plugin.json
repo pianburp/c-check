@@ -1,0 +1,6 @@
+{
+  "name": "c-check",
+  "version": "0.1.0",
+  "description": "Verification mod: checks what Claude does and blocks, warns, or sends Claude back when a rule fails.",
+  "author": { "name": "Ahmad" }
+}

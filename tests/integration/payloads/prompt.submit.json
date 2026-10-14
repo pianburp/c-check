@@ -1,0 +1,7 @@
+{
+  "text": "Do exactly these steps with these tools, nothing else: 1) Write tool: create a.txt with content 'one'. 2) Edit tool: in notes.txt replace 'first' with 'second'. 3) Bash tool: run 'git status --short'. Then reply 'done'.",
+  "wait": false,
+  "origin": {
+    "kind": "sdk"
+  }
+}

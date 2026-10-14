@@ -1,0 +1,12 @@
+{
+  "ref": 1,
+  "result": {
+    "type": "create",
+    "filePath": "{{ROOT}}\\a.txt",
+    "content": "one",
+    "structuredPatch": [],
+    "originalFile": null,
+    "userModified": false
+  },
+  "text": "File created successfully at: {{ROOT}}\\a.txt (file state is current in your context \u2014 no need to Read it back)"
+}

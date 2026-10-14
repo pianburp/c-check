@@ -1,0 +1,8 @@
+{
+  "replace_all": false,
+  "file_path": "{{ROOT}}\\notes.txt",
+  "old_string": "first",
+  "new_string": "second",
+  "tool": "Edit",
+  "tool_use_id": "toolu_01RP7sRm9Qy8wmCekUtD9X5T"
+}

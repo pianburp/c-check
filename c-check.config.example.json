@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "tests-pass-before-done": { "mode": "enforce", "command": "npm test", "timeoutSec": 300 },
+    "no-outside-edits": { "mode": "enforce" },
+    "no-risky-commands": { "mode": "observe", "extraPatterns": [], "allowPatterns": [] },
+    "no-secrets-in-files": { "mode": "observe" },
+    "claimed-changes-are-real": { "mode": "observe" },
+    "no-test-weakening": { "mode": "enforce" },
+    "no-test-bloat": { "mode": "observe", "unitTestDir": "tests/unit", "maxTestToSourceRatio": 2, "maxNewTestCases": 5 }
+  },
+  "maxSendBacks": 3,
+  "logDir": ".c-check/logs"
+}
