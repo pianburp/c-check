@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "example.cfg",
+    "content": "AWS_ACCESS_KEY_ID=\n"
+  }
+}

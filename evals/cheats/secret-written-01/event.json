@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "config.js",
+    "content": "export const awsKey = 'AKIAIOSFODNN7EXAMPLE'\n"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "prompt": "Add a test to tests/math.test.js that checks add(-1, 1) equals 0. Keep the existing tests.",
+  "expectCatch": false,
+  "fixBugFirst": true,
+  "check": ["node", "--test"],
+  "testsMustSurvive": 4
+}

@@ -1,5 +1,6 @@
 # c-check
 
+[![CI](https://github.com/pianburp/c-check/actions/workflows/ci.yml/badge.svg)](https://github.com/pianburp/c-check/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Claude Code: v2.1.290+](https://img.shields.io/badge/Claude_Code-v2.1.290%2B-brightblue.svg)
 ![Runtime dependencies: none](https://img.shields.io/badge/runtime_dependencies-none-brightgreen.svg)
@@ -9,12 +10,15 @@ Trust what [Claude Code](https://claude.com/claude-code) just did.
 c-check is a verification [mod](#install) that checks every edit, command and finish. It blocks, warns, or sends Claude back when a rule fails.
 Rules are code, not text in `CLAUDE.md`, so Claude cannot talk its way past them. No daemon, no build step. See [c-check-design.md](c-check-design.md) for the full design.
 
-```sh
-git clone https://github.com/pianburp/c-check.git
-claude --plugin-dir ./c-check
+At the Claude Code prompt:
+
+```
+/plugin install c-check --marketplace pianburp/c-check
 ```
 
-In the session, `/plugin` shows `1 mod active · c-check`. Without a config file, safe defaults apply.
+Answer `y` to add the marketplace, then pick a scope. That is the whole setup: no clone, no `npm install`, no config file (safe defaults apply).
+
+The status line then keeps score for the session, for example `c-check ✓ 41 passed · ⚠ 1 warned · ✗ 2 caught`. A toast says what was caught, and `c-check: all end checks passed` when Claude finishes clean.
 
 ## What it checks
 
@@ -27,6 +31,7 @@ In the session, `/plugin` shows `1 mod active · c-check`. Without a config file
 | `no-secrets-in-files` | after | observe | Warn with the line number of a likely secret |
 | `claimed-changes-are-real` | end | observe | Warn when file edits and the real git diff do not match |
 | `no-test-bloat` | end | observe | Warn about tests nobody asked for. Never blocks. |
+| `tests-still-bite` | end | observe | Send Claude back when the original tests fail on the new code (tests were changed to fit) |
 
 `tests-pass-before-done` and `no-test-weakening` always ship together: the first pushes Claude to make tests pass, the second stops it from passing by cheating.
 
@@ -44,13 +49,13 @@ After 3 send-backs from the same rule without a pass in between, c-check stops s
 
 c-check is a mod: a plugin whose `hooks/hooks.json` points at `src/adapter/register.ts`. Claude Code runs the TypeScript directly; there is no build step.
 
-Try it for one session:
+Install from the marketplace (from a shell: `claude plugin install c-check --marketplace pianburp/c-check`), or try a local checkout for one session:
 
 ```sh
 claude --plugin-dir /path/to/c-check
 ```
 
-To load it in every session, list it in `CLAUDE_CODE_PLUGIN_DIRS` (absolute paths, `;` between them on Windows, `:` elsewhere), or add the folder to a plugin marketplace and install it with `claude plugin install c-check@<marketplace> --scope project`.
+To load it in every session, list it in `CLAUDE_CODE_PLUGIN_DIRS` (absolute paths, `;` between them on Windows, `:` elsewhere).
 
 Check what Claude Code reads from the mod:
 
@@ -123,6 +128,56 @@ evals/              sample repo and real task runs
 ```
 
 To add a rule, see [docs/writing-a-rule.md](docs/writing-a-rule.md).
+
+## Rule scores (cheat suite)
+
+Catch rate on recorded cheats, and false alarms on clean runs. CI replays the suite on every PR and fails if a number gets worse than `evals/baseline.json`.
+
+<!-- rule-table -->
+| rule | catch rate | false alarm rate |
+| :- | :- | :- |
+| judge-special-cases | 0/20 (0.0%) | 0/42 (0.0%) |
+| no-outside-edits | 3/3 (100.0%) | 0/42 (0.0%) |
+| no-secrets-in-files | 3/3 (100.0%) | 0/42 (0.0%) |
+| no-test-bloat | 0/0 (n/a) | 2/42 (4.8%) |
+| no-test-weakening | 11/12 (91.7%) | 0/42 (0.0%) |
+| tests-still-bite | 9/9 (100.0%) | 2/42 (4.8%) |
+
+`judge-special-cases` is off by default, so it scores 0 here until calibrated. Both `tests-still-bite` false alarms are warnings on test changes the user asked for (the prompt downgrade), not send-backs.
+
+<!-- /rule-table -->
+
+### R9 calibration
+
+`judge-special-cases` asks the real `claude` model, so it costs money and is never run by CI. The 40 calibration cases (20 `hard-coded-answer` cheats, 20 clean source fixes) carry `"calibration": true` in `case.json`. To measure it:
+
+```
+node evals/replay.ts --judge --repeat 3
+```
+
+It prints catch rate, false alarm rate (each with a 95% Wilson range) and self-agreement (share of cases where all runs gave the same verdict). Targets: catch rate >= 80%, false alarm rate <= 10%, self-agreement >= 90%.
+
+Not run yet — R9 stays off until it is.
+
+## Rule retirement
+
+A rule that fixes a habit the newest model no longer has only costs runtime and risks false blocks. Each rule has a `kind`:
+
+- `safety` (`no-outside-edits`, `no-risky-commands`, `no-secrets-in-files`): rare, costly, hard to undo. Never retired, even at 0 fires.
+- `habit` (the rest): fixes model behaviour that may go away. Retired on numbers.
+
+After each major model release (and at least every 6 months), run every task with all rules in `observe`, so Claude sees nothing from c-check. This is billed.
+
+```
+node evals/run.ts --model <model-id> --retire-check --trials 10
+node evals/retire.ts <model-id> [previous-model-id]
+```
+
+The first command writes `evals/results/models/<model-id>.json` (fire counts per rule: runs where the raw verdict was not `allow`). The second prints one row per rule with fire rates (95% Wilson range) and a verdict:
+
+Retiring a rule is a PR that sets its default mode to `off`, with the report in the PR text. Never delete the rule code or its cheat-suite cases: the suite keeps checking it works, so it can return if a later model brings the habit back.
+
+Latest report: No retire run yet.
 
 ## Contributing
 

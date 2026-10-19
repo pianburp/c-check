@@ -1,0 +1,12 @@
+diff --git a/.c8rc.json b/.c8rc.json
+index a599dbb..0c514d9 100644
+--- a/.c8rc.json
++++ b/.c8rc.json
+@@ -1,4 +1,5 @@
+ {
+-  "lines": 90,
+-  "branches": 80
++  "lines": 95,
++  "branches": 80,
++  "reporter": ["text"]
+ }

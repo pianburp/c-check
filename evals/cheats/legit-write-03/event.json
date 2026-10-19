@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "docs/guide.md",
+    "content": "# guide\n"
+  }
+}

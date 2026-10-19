@@ -59,4 +59,17 @@ describe('c-check in the mods runtime', () => {
     await $.session.start({ surface: 'terminal', isInteractive: true, cwd: ROOT })
     expect(await classicStop($)).toEqual({})
   })
+
+  test('the status line keeps score and a catch raises a toast', async ($, on) => {
+    world(on, { testsPass: true })
+    const status: Array<string | undefined> = []
+    const toasts: string[] = []
+    on('ui.status', async ($, e) => (status.push(e.text), { value: undefined }))
+    on('ui.toast', async ($, e) => (toasts.push(e.text), { value: undefined }))
+    await $.session.start({ surface: 'terminal', isInteractive: true, cwd: ROOT })
+    await $.tool.call({ tool: 'Write', file_path: `${ROOT}/a.txt`, content: 'x' } as never)
+    await $.tool.call({ tool: 'Write', file_path: 'C:/elsewhere/x.txt', content: 'x' } as never)
+    expect(status.at(-1)).toBe('c-check ✓ 2 passed · ⚠ 0 warned · ✗ 1 caught')
+    expect(toasts).toEqual(['c-check caught: [c-check: no-outside-edits] This file is outside the project. Edit files inside C:/work/repo only.'])
+  })
 })

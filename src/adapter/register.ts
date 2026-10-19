@@ -18,6 +18,8 @@ interface Box {
   session?: Session
   /** End-of-task warnings not yet shown. At Stop, text handed to Claude makes it keep working, so they wait for the next prompt. */
   pending: string[]
+  /** What the status line shows: checks that passed, warned, and caught something this session. */
+  score: { passed: number; warned: number; caught: number }
 }
 
 // Fields of a tool.call event that are not the tool's own arguments.
@@ -63,6 +65,12 @@ async function startSession($: EngineInterface, box: Box, cwd: string | undefine
   box.session = current
   try {
     state.baseline = await snapshot(ports, root, id)
+    if (state.baseline != null) {
+      const tree = state.baseline.tree
+      // `c-check label` rebuilds the session-start files from this tree; the ref keeps git gc from dropping it.
+      void current.logger.write({ ts: new Date(await $.clock.now()).toISOString(), session: id, event: 'baseline', details: { tree } }, '.c-check/logs')
+      await ports.run(['git', 'update-ref', `refs/c-check/${id.replace(/[^\w-]/g, '_')}`, tree], { cwd: root, timeoutMs: 10_000 }).catch(() => {})
+    }
   } catch (err) {
     state.baseline = undefined
     void current.logger.write({ ts: new Date(await $.clock.now()).toISOString(), session: id, event: 'error', details: { baseline: String((err as Error)?.message ?? err) } }, '.c-check/logs')
@@ -86,10 +94,26 @@ async function check($: EngineInterface, box: Box, point: CheckPoint, tool?: str
       ...(output !== undefined && { output }),
       timestamp: new Date(await $.clock.now()).toISOString(),
     }
-    return await runEvent(event, { rules: RULES, ports: portsOf($), state: s.state, logger: s.logger })
+    const outcome = await runEvent(event, { rules: RULES, ports: portsOf($), state: s.state, logger: s.logger })
+    show($, box, point, outcome)
+    return outcome
   } catch {
     return { kind: 'allow' }
   }
+}
+
+/** The human's view: a running score in the status line, and a toast when a check catches something or a finish is clean. */
+function show($: EngineInterface, box: Box, point: CheckPoint, outcome: Outcome): void {
+  const { score } = box
+  if (outcome.kind === 'allow') score.passed += 1
+  else if (outcome.kind === 'warn') score.warned += 1
+  else score.caught += 1
+  // A drawing failure must never turn a block into an allow, so it stays inside its own try.
+  try {
+    $.ui.status(`c-check ✓ ${score.passed} passed · ⚠ ${score.warned} warned · ✗ ${score.caught} caught`)
+    if (outcome.kind === 'block' || outcome.kind === 'send_back') $.ui.toast(`c-check caught: ${(outcome.message ?? 'a rule failed').split('\n')[0]}`)
+    else if (point === 'end' && outcome.kind === 'allow') $.ui.toast('c-check: all end checks passed')
+  } catch {}
 }
 
 async function logUnknown($: EngineInterface, box: Box, what: string): Promise<void> {
@@ -100,7 +124,9 @@ async function logUnknown($: EngineInterface, box: Box, what: string): Promise<v
 }
 
 export function register(on: On): void {
-  const box: Box = { pending: [] }
+  // R9's child `claude -p` sets C_CHECK_CHILD=1: it must never run c-check on itself.
+  if (typeof process !== 'undefined' && process.env.C_CHECK_CHILD === '1') return
+  const box: Box = { pending: [], score: { passed: 0, warned: 0, caught: 0 } }
 
   on('session.start', async ($, e, next) => {
     try {

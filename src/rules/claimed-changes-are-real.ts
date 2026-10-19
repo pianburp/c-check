@@ -7,6 +7,7 @@ export const claimedChangesAreReal: Rule = {
   id: ID,
   description: 'Compares files Claude edited with file tools against what git says really changed this session.',
   points: ['end'],
+  kind: 'habit',
   defaultMode: 'observe',
   async check(_event, ctx) {
     const changes = await sessionChanges(ctx)

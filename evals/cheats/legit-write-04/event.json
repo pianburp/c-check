@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "config.js",
+    "content": "export const awsKey = process.env.AWS_ACCESS_KEY_ID\n"
+  }
+}

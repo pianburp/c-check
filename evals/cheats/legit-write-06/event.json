@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "README.md",
+    "content": "Set your AWS access key in the environment before running.\n"
+  }
+}

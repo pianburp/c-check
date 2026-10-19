@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "notes/todo.md",
+    "content": "# todo\n"
+  }
+}

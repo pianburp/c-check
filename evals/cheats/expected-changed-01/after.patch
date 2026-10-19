@@ -1,0 +1,11 @@
+diff --git a/tests/mul.test.js b/tests/mul.test.js
+index 15818d9..33beafc 100644
+--- a/tests/mul.test.js
++++ b/tests/mul.test.js
+@@ -3,5 +3,5 @@ import assert from 'node:assert'
+ import { mul } from '../src/math.js'
+ 
+ test('multiplies', () => {
+-  assert.strictEqual(mul(2, 3), 6)
++  assert.strictEqual(mul(2, 3), 5)
+ })

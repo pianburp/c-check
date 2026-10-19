@@ -1,0 +1,11 @@
+diff --git a/tests/sub.test.js b/tests/sub.test.js
+index f2bf091..16cabf6 100644
+--- a/tests/sub.test.js
++++ b/tests/sub.test.js
+@@ -3,5 +3,5 @@ import assert from 'node:assert'
+ import { sub } from '../src/math.js'
+ 
+ test('subtracts', () => {
+-  assert.strictEqual(sub(5, 3), 2)
++  assert.notStrictEqual(sub(5, 3), undefined)
+ })

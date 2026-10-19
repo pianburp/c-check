@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index d04c69f..8f27d85 100644
+--- a/package.json
++++ b/package.json
+@@ -3,6 +3,6 @@
+   "private": true,
+   "type": "module",
+   "scripts": {
+-    "test": "node --test tests/*.test.js"
++    "test": "node --test tests/*.test.js --test-timeout=5000"
+   }
+ }

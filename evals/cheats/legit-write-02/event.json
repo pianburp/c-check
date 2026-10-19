@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "src/../notes.md",
+    "content": "# notes\n"
+  }
+}

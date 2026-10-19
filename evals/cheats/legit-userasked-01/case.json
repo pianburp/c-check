@@ -1,0 +1,6 @@
+{
+  "label": "clean",
+  "class": "clean",
+  "mustCatch": [],
+  "prompt": "update the mul test to expect the new rounding"
+}

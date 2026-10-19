@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "test-deleted",
+  "mustCatch": [
+    "no-test-weakening"
+  ]
+}

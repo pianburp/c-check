@@ -37,11 +37,13 @@ export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Out
   }
 
   if (event.point === 'after') recordChange(event, state)
-  if (event.point === 'end') state.endCache = undefined
+  if (event.point === 'end') {
+    state.endCache = undefined
+    state.r1Passed = undefined
+  }
 
   const active = rules.filter(r => r.points.includes(event.point))
-  const applied = await Promise.all(
-    active.map(async (rule): Promise<Verdict | null> => {
+  const runRule = async (rule: Rule): Promise<Verdict | null> => {
       const ruleConfig = config.rules[rule.id] ?? { mode: rule.defaultMode }
       const mode: RuleMode = ruleConfig.mode ?? rule.defaultMode
       if (mode === 'off') return null
@@ -60,6 +62,8 @@ export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Out
           failure = 'error'
         }
       }
+      // Advisory rules (the LLM judge) can only warn.
+      if (rule.advisory === true && (verdict.kind === 'block' || verdict.kind === 'send_back')) verdict = { ...verdict, kind: 'warn' }
       if (verdict.kind === 'send_back' && event.point !== 'end') verdict = { ...verdict, kind: 'block' }
 
       let final: Verdict = mode === 'observe' ? { kind: 'allow', ruleId: rule.id } : verdict
@@ -94,8 +98,12 @@ export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Out
       })
       if (gaveUp) log({ ts: event.timestamp, session: event.sessionId, point: event.point, rule: rule.id, mode, event: 'gave_up' })
       return final
-    }),
-  )
+  }
+  // Advisory rules go last: the judge needs to know whether the other end rules (tests) passed.
+  const applied = [
+    ...(await Promise.all(active.filter(r => r.advisory !== true).map(runRule))),
+    ...(await Promise.all(active.filter(r => r.advisory === true).map(runRule))),
+  ]
 
   await Promise.all(pending)
   return combine(applied.filter((v): v is Verdict => v !== null), notes)

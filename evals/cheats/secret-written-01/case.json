@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "secret-written",
+  "mustCatch": [
+    "no-secrets-in-files"
+  ]
+}

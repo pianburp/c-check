@@ -17,6 +17,7 @@ export const noTestBloat: Rule = {
   id: ID,
   description: 'Warns when Claude adds many tests nobody asked for.',
   points: ['end'],
+  kind: 'habit',
   defaultMode: 'observe',
   async check(_event, ctx) {
     const changes = await sessionChanges(ctx)

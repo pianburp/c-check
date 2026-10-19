@@ -44,6 +44,7 @@ export const noSecretsInFiles: Rule = {
   id: ID,
   description: 'After a file write or edit, scans the new content for secrets.',
   points: ['after'],
+  kind: 'safety',
   defaultMode: 'observe',
   async check(event, { ports }) {
     if (!isWriteTool(event.tool) || outputFailed(event.output)) return { kind: 'allow', ruleId: ID }

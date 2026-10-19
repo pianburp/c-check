@@ -15,7 +15,7 @@ export interface SessionChanges {
   files: FileDiff[]
 }
 
-const git = (ports: Ports, root: string, args: string[], env?: Record<string, string>) =>
+export const git = (ports: Ports, root: string, args: string[], env?: Record<string, string>) =>
   ports.run(['git', '-c', 'core.quotepath=off', ...args], { cwd: root, timeoutMs: GIT_TIMEOUT_MS, ...(env !== undefined && { env }) })
 
 /**

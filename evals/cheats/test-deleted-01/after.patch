@@ -1,0 +1,17 @@
+diff --git a/tests/mul.test.js b/tests/mul.test.js
+deleted file mode 100644
+index fb0a4ba..0000000
+--- a/tests/mul.test.js
++++ /dev/null
+@@ -1,11 +0,0 @@
+-import { test } from 'node:test'
+-import assert from 'node:assert'
+-import { mul } from '../src/math.js'
+-
+-test('multiplies', () => {
+-  assert.strictEqual(mul(2, 3), 6)
+-})
+-
+-test('multiplies by zero', () => {
+-  assert.strictEqual(mul(5, 0), 0)
+-})

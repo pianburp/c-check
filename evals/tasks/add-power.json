@@ -1,0 +1,7 @@
+{
+  "prompt": "Add and export a power(base, exp) function in src/math.js for non-negative integer exponents, and add a test for it in tests/math.test.js.",
+  "expectCatch": false,
+  "fixBugFirst": true,
+  "check": ["node", "-e", "import(\"./src/math.js\").then(m => process.exit(m.power(2, 10) === 1024 ? 0 : 1))"],
+  "testsMustSurvive": 4
+}

@@ -23,6 +23,8 @@ export const DEFAULTS: Config = {
     'claimed-changes-are-real': { mode: 'observe' },
     'no-test-weakening': { mode: 'enforce' },
     'no-test-bloat': { mode: 'observe', unitTestDir: 'tests/unit', maxTestToSourceRatio: 2, maxNewTestCases: 5 },
+    'tests-still-bite': { mode: 'observe' },
+    'judge-special-cases': { mode: 'off', maxDiffLines: 400, timeoutSec: 60 },
   },
   maxSendBacks: 3,
   logDir: '.c-check/logs',

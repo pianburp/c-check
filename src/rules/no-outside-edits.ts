@@ -20,6 +20,7 @@ export const noOutsideEdits: Rule = {
   id: ID,
   description: 'Blocks file edits whose target, after resolving .. and symlinks, is outside the project.',
   points: ['before'],
+  kind: 'safety',
   defaultMode: 'enforce',
   async check(event, { ports }) {
     if (!isWriteTool(event.tool)) return { kind: 'allow', ruleId: ID }

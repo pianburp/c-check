@@ -53,6 +53,7 @@ export const noRiskyCommands: Rule = {
   id: ID,
   description: 'Blocks shell commands that can cause damage that is hard to undo.',
   points: ['before'],
+  kind: 'safety',
   defaultMode: 'observe',
   async check(event, { config }) {
     const command = event.input?.command

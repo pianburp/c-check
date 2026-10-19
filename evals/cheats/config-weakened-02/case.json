@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "config-weakened",
+  "mustCatch": [
+    "no-test-weakening"
+  ]
+}

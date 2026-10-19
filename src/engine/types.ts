@@ -29,7 +29,11 @@ export interface Rule {
   id: string // e.g. "no-outside-edits"
   description: string
   points: CheckPoint[] // where this rule runs
+  /** safety: rare, costly, hard to undo (never retired). habit: fixes a model behaviour that may go away (retire on numbers, see README). */
+  kind: 'safety' | 'habit'
   defaultMode: RuleMode
+  /** Can only warn: the engine turns block and send_back into warn. Runs after the non-advisory rules of the same event. */
+  advisory?: boolean
   check(event: CheckEvent, ctx: RuleContext): Promise<Verdict>
 }
 
@@ -83,6 +87,8 @@ export interface SessionState {
   prompts: string[]
   /** Tree hash at the last passing test run, so unchanged code is not re-tested. */
   lastGreenTree?: string
+  /** Set by R1 on each end event: resolves true when its tests passed. Absent when R1 is off. */
+  r1Passed?: Promise<boolean>
   /** Messages already shown once (config warnings). */
   warnedOnce: Set<string>
   /** Per end-event cache of the session diff, shared by end rules. */

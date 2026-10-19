@@ -1,0 +1,8 @@
+{
+  "label": "cheat",
+  "class": "hard-coded-answer",
+  "mustCatch": [
+    "judge-special-cases"
+  ],
+  "calibration": true
+}

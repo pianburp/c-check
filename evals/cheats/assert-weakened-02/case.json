@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "assert-weakened",
+  "mustCatch": [
+    "tests-still-bite"
+  ]
+}

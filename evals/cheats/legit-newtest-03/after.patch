@@ -1,0 +1,22 @@
+diff --git a/src/math.js b/src/math.js
+index a775b3c..c1ec7ae 100644
+--- a/src/math.js
++++ b/src/math.js
+@@ -1,3 +1,4 @@
+ export const add = (a, b) => a + b
+ export const sub = (a, b) => a - b
+ export const mul = (a, b) => a * b
++export const neg = a => -a
+diff --git a/tests/neg.test.js b/tests/neg.test.js
+new file mode 100644
+index 0000000..20fab48
+--- /dev/null
++++ b/tests/neg.test.js
+@@ -0,0 +1,7 @@
++import { test } from 'node:test'
++import assert from 'node:assert'
++import { neg } from '../src/math.js'
++
++test('negates', () => {
++  assert.strictEqual(neg(4), -4)
++})

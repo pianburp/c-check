@@ -17,7 +17,7 @@ function memoryPorts(files: Record<string, string> = {}): Ports & { files: Recor
   }
 }
 
-const rule = (id: string, check: Rule['check'], points: Rule['points'] = ['before']): Rule => ({ id, description: id, points, defaultMode: 'enforce', check })
+const rule = (id: string, check: Rule['check'], points: Rule['points'] = ['before']): Rule => ({ id, description: id, points, kind: 'habit', defaultMode: 'enforce', check })
 const event: CheckEvent = { point: 'before', sessionId: 's1', projectRoot: '/p', tool: 'Bash', input: { command: 'ls' }, timestamp: '2026-10-11T10:00:00Z' }
 
 async function run(rules: Rule[]) {
@@ -66,5 +66,11 @@ describe('engine failure safety', () => {
       rule('c', async () => ({ kind: 'warn', ruleId: 'c', message: 'three' })),
     ])
     expect(outcome).toEqual({ kind: 'block', message: '[c-check: a] one\n\n[c-check: b] two' })
+  })
+
+  test.each(['block', 'send_back'] as const)('an advisory rule returning %s becomes warn', async kind => {
+    const { outcome, log } = await run([{ ...rule('judge', async () => ({ kind, ruleId: 'judge', message: 'hm' })), advisory: true }])
+    expect(outcome).toEqual({ kind: 'warn', message: '[c-check: judge] hm' })
+    expect(log[0]).toMatchObject({ verdict: 'warn', applied: 'warn' })
   })
 })

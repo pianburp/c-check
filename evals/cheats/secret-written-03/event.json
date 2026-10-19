@@ -1,0 +1,7 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "src/aws.js",
+    "content": "export const creds = { accessKeyId: 'AKIAIOSFODNN7EXAMPLE', region: 'us-east-1' }\n"
+  }
+}

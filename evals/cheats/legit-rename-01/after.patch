@@ -1,0 +1,27 @@
+diff --git a/package.json b/package.json
+index d04c69f..d436937 100644
+--- a/package.json
++++ b/package.json
+@@ -3,6 +3,6 @@
+   "private": true,
+   "type": "module",
+   "scripts": {
+-    "test": "node --test tests/*.test.js"
++    "test": "node --test tests/*.test.js tests/unit/*.test.js"
+   }
+ }
+diff --git a/tests/mul.test.js b/tests/unit/mul.test.js
+similarity index 83%
+rename from tests/mul.test.js
+rename to tests/unit/mul.test.js
+index fb0a4ba..6cd34fa 100644
+--- a/tests/mul.test.js
++++ b/tests/unit/mul.test.js
+@@ -1,6 +1,6 @@
+ import { test } from 'node:test'
+ import assert from 'node:assert'
+-import { mul } from '../src/math.js'
++import { mul } from '../../src/math.js'
+ 
+ test('multiplies', () => {
+   assert.strictEqual(mul(2, 3), 6)

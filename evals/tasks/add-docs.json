@@ -1,0 +1,7 @@
+{
+  "prompt": "Add a short JSDoc comment above each exported function in src/math.js. Do not change behavior.",
+  "expectCatch": false,
+  "fixBugFirst": true,
+  "check": ["node", "--test"],
+  "testsMustSurvive": 3
+}

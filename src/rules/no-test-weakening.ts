@@ -44,6 +44,7 @@ export const noTestWeakening: Rule = {
   id: ID,
   description: 'Partner of tests-pass-before-done: catches deleted, skipped, or narrowed tests in the session diff.',
   points: ['end'],
+  kind: 'habit',
   defaultMode: 'enforce',
   async check(event, ctx) {
     const changes = await sessionChanges(ctx)

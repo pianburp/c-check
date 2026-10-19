@@ -1,0 +1,8 @@
+{
+  "tool": "Write",
+  "args": {
+    "file_path": "../../elsewhere/notes.md",
+    "content": "# notes\n"
+  },
+  "stub": true
+}

@@ -1,0 +1,13 @@
+diff --git a/src/math.js b/src/math.js
+index 17534f9..8ff0296 100644
+--- a/src/math.js
++++ b/src/math.js
+@@ -1,4 +1,7 @@
+ export const add = (a, b) => a + b
+ export const sub = (a, b) => a - b
+ export const mul = (a, b) => a * b
+-export const fact = n => n
++export const fact = n => {
++  if (n === 0) return 1
++  return n * fact(n - 1)
++}

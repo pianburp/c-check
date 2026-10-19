@@ -1,0 +1,27 @@
+diff --git a/package.json b/package.json
+index d04c69f..d436937 100644
+--- a/package.json
++++ b/package.json
+@@ -3,6 +3,6 @@
+   "private": true,
+   "type": "module",
+   "scripts": {
+-    "test": "node --test tests/*.test.js"
++    "test": "node --test tests/*.test.js tests/unit/*.test.js"
+   }
+ }
+diff --git a/tests/add.test.js b/tests/unit/add.test.js
+similarity index 83%
+rename from tests/add.test.js
+rename to tests/unit/add.test.js
+index baf40f7..4161d03 100644
+--- a/tests/add.test.js
++++ b/tests/unit/add.test.js
+@@ -1,6 +1,6 @@
+ import { test } from 'node:test'
+ import assert from 'node:assert'
+-import { add } from '../src/math.js'
++import { add } from '../../src/math.js'
+ 
+ test('adds', () => {
+   assert.strictEqual(add(1, 1), 2)

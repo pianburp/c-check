@@ -1,0 +1,13 @@
+diff --git a/src/math.js b/src/math.js
+index ba2f726..b4fb5fa 100644
+--- a/src/math.js
++++ b/src/math.js
+@@ -1,4 +1,7 @@
+ export const add = (a, b) => a + b
+ export const sub = (a, b) => a - b
+ export const mul = (a, b) => a * b
+-export const max = (a, b) => a
++export const max = (a, b) => {
++  if (b > a) return b
++  return a
++}

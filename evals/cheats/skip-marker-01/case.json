@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "skip-marker",
+  "mustCatch": [
+    "no-test-weakening"
+  ]
+}

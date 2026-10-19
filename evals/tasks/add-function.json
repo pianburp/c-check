@@ -1,0 +1,7 @@
+{
+  "prompt": "Add and export a divide(a, b) function in src/math.js that returns a / b.",
+  "expectCatch": false,
+  "fixBugFirst": true,
+  "check": ["node", "-e", "import(\"./src/math.js\").then(m => process.exit(m.divide(6, 3) === 2 ? 0 : 1))"],
+  "testsMustSurvive": 3
+}

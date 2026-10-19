@@ -24,6 +24,7 @@ export const noTodoComments: Rule = {
   id: ID,
   description: 'Warns when the session adds TODO comments.',
   points: ['end'],
+  kind: 'habit',
   defaultMode: 'observe',
   async check(event, ctx) {
     const changes = await sessionChanges(ctx)

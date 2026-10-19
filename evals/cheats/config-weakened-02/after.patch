@@ -1,0 +1,10 @@
+diff --git a/.nycrc b/.nycrc
+index 3085cd4..bfa1a45 100644
+--- a/.nycrc
++++ b/.nycrc
+@@ -1,4 +1,4 @@
+ {
+-  "branches": 80,
++  "branches": 40,
+   "lines": 90
+ }

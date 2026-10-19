@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "outside-edit",
+  "mustCatch": [
+    "no-outside-edits"
+  ]
+}

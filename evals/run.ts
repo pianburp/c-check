@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 /// <reference types="node" />
 // Real task runs (§12.3): each task in evals/tasks runs in a fresh copy of evals/sample-repo, with c-check on and off.
-// Slow and billed (it drives real `claude -p` sessions). Run before a release: node evals/run.ts [task-name ...]
+// Slow and billed (it drives real `claude -p` sessions). Run before a release: node evals/run.ts [--trials N] [--model <id>] [--retire-check] [task-name ...]
+// --model <id> goes to every `claude -p` call. --retire-check (§8b) sets EVERY rule to observe so Claude sees nothing from c-check,
+// runs every task with c-check on only (an off arm tells us nothing about rules), and writes evals/results/models/<id>.json:
+//   { model, trials, runs, rules: { <ruleId>: { kind: 'safety'|'habit', fires, runs } } }
+// fires = runs where the rule's raw verdict (log field `verdict`, not `applied`) was not allow at least once; runs = all runs.
 import { execFileSync, spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { register } from 'node:module'
+import { formatRate } from './stats.ts'
 
 interface Task {
   prompt: string
@@ -25,7 +31,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const MOD = resolve(HERE, '..')
 const TIMEOUT_MS = 10 * 60_000
 
-function runTask(name: string, task: Task, withCheck: boolean) {
+function runTask(name: string, task: Task, withCheck: boolean, model?: string, retireRules?: readonly { id: string }[]) {
   const parent = mkdtempSync(join(tmpdir(), 'c-check-eval-'))
   const root = join(parent, 'repo')
   cpSync(join(HERE, 'sample-repo'), root, { recursive: true })
@@ -34,42 +40,119 @@ function runTask(name: string, task: Task, withCheck: boolean) {
   git('init', '-q')
   git('add', '-A')
   git('commit', '-qm', 'init')
+  if (retireRules) writeFileSync(join(root, 'c-check.config.json'), JSON.stringify({ rules: Object.fromEntries(retireRules.map(r => [r.id, { mode: 'observe' }])) }))
 
-  const args = ['-p', task.prompt, '--permission-mode', 'acceptEdits', '--allowedTools=Bash(npm test*),Bash(node *)', ...(withCheck ? ['--plugin-dir', MOD] : [])]
+  const args = ['-p', task.prompt, '--output-format', 'json', '--permission-mode', 'acceptEdits', '--allowedTools=Bash(npm test*),Bash(node *)', ...(model ? ['--model', model] : []), ...(withCheck ? ['--plugin-dir', MOD] : [])]
   const started = Date.now()
   // On Windows `claude` is a .cmd shim, which needs a shell; the shell then needs each argument quoted.
   const win = process.platform === 'win32'
   const session = spawnSync('claude', win ? args.map(a => `"${a}"`) : args, { cwd: root, encoding: 'utf8', timeout: TIMEOUT_MS, shell: win, input: '' })
   const seconds = (Date.now() - started) / 1000
 
+  // Optional: token use from the JSON result's usage field; absent or unparseable output just means no number.
+  let tokens: number | undefined
+  try {
+    const u = (JSON.parse(session.stdout) as { usage?: Record<string, number> }).usage
+    if (u) tokens = (u.input_tokens ?? 0) + (u.output_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0)
+  } catch { /* not JSON */ }
+
   const logs = existsSync(join(root, '.c-check', 'logs'))
     ? readdirSync(join(root, '.c-check', 'logs')).flatMap(f => readFileSync(join(root, '.c-check', 'logs', f), 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as Record<string, unknown>))
     : []
-  const caught = logs.filter(l => l.applied === 'block' || l.applied === 'send_back').length
+  const blocks = logs.filter(l => l.applied === 'block' || l.applied === 'send_back')
   const checkOk = task.check === undefined || spawnSync(task.check[0] as string, task.check.slice(1), { cwd: root }).status === 0
   const casesLeft = existsSync(join(root, 'tests')) ? readdirSync(join(root, 'tests')).reduce((n, f) => n + (readFileSync(join(root, 'tests', f), 'utf8').match(/^test\(/gm)?.length ?? 0), 0) : 0
   const testsOk = task.testsMustSurvive === undefined || casesLeft >= task.testsMustSurvive
   const outsideOk = task.outsideFile === undefined || !existsSync(resolve(root, task.outsideFile))
   rmSync(parent, { recursive: true, force: true })
   return {
-    task: name,
-    cCheck: withCheck ? 'on' : 'off',
     success: session.status === 0 && checkOk && testsOk && outsideOk,
-    caught,
-    falseBlock: withCheck && !task.expectCatch && caught > 0 && checkOk && testsOk,
-    seconds: Math.round(seconds),
+    caught: blocks.length,
+    firedRules: [...new Set(logs.filter(l => l.verdict !== undefined && l.verdict !== 'allow').map(l => String(l.rule)))],
+    blockedRules: [...new Set(blocks.map(l => String(l.rule)))],
+    seconds,
+    tokens,
   }
 }
 
-const wanted = process.argv.slice(2)
+type Run = ReturnType<typeof runTask>
+
+const argv = process.argv.slice(2)
+if (argv.includes('--help') || argv.includes('-h')) {
+  console.log('usage: node evals/run.ts [--trials N] [--model <id>] [--retire-check] [task-name ...]\nRuns each task N times (default 5) with c-check on and N times off (--retire-check: on only, every rule observe). Billed: drives real `claude -p` sessions.')
+  process.exit(0)
+}
+const ti = argv.indexOf('--trials')
+const trials = ti >= 0 ? Number(argv[ti + 1]) : 5
+if (!Number.isInteger(trials) || trials < 1) throw new Error('--trials needs a positive integer')
+const mi = argv.indexOf('--model')
+const model = mi >= 0 ? argv[mi + 1] : undefined
+if (mi >= 0 && (model === undefined || model.startsWith('--'))) throw new Error('--model needs a model id')
+const retire = argv.includes('--retire-check')
+if (retire && !model) throw new Error('--retire-check needs --model <id>')
+const wanted = argv.filter((a, i) => a !== '--retire-check' && !(ti >= 0 && (i === ti || i === ti + 1)) && !(mi >= 0 && (i === mi || i === mi + 1)))
 const tasks = readdirSync(join(HERE, 'tasks'))
   .filter(f => f.endsWith('.json'))
   .map(f => [f.replace(/\.json$/, ''), JSON.parse(readFileSync(join(HERE, 'tasks', f), 'utf8')) as Task] as const)
   .filter(([name]) => wanted.length === 0 || wanted.includes(name))
 
-const results = tasks.flatMap(([name, task]) => [runTask(name, task, true), runTask(name, task, false)])
-console.table(results)
-const on = results.filter(r => r.cCheck === 'on')
-const off = results.filter(r => r.cCheck === 'off')
-const avg = (rs: typeof results) => rs.reduce((n, r) => n + r.seconds, 0) / Math.max(1, rs.length)
-console.log(`catches: ${on.reduce((n, r) => n + r.caught, 0)}  false blocks: ${on.filter(r => r.falseBlock).length}/${on.length}  success on/off: ${on.filter(r => r.success).length}/${off.filter(r => r.success).length}  extra time: ${Math.round(avg(on) - avg(off))} s per task`)
+let retireRules: readonly { id: string; kind: string }[] | undefined
+if (retire) {
+  // src/ imports have no extensions (vitest style); node needs a hook to find the .ts files.
+  register('data:text/javascript,' + encodeURIComponent(`export async function resolve(s, c, next) { try { return await next(s, c) } catch (e) { if (e.code === 'ERR_MODULE_NOT_FOUND' && /^\\.{1,2}\\//.test(s)) return next(s + '.ts', c); throw e } }`))
+  retireRules = (await import('../src/rules/index.ts')).RULES
+}
+
+const started = Date.now()
+const sum = (rs: Run[], f: (r: Run) => number) => rs.reduce((n, r) => n + f(r), 0)
+const per = (rs: Run[]) => {
+  const successes = rs.filter(r => r.success).length
+  return { successes, runs: rs.length, flaky: successes !== 0 && successes !== rs.length }
+}
+const rows = tasks.map(([name, task]) => {
+  const on: Run[] = []
+  const off: Run[] = []
+  for (let i = 0; i < trials; i++) { on.push(runTask(name, task, true, model, retireRules)); if (!retire) off.push(runTask(name, task, false, model)) }
+  const blocksByRule: Record<string, number> = {}
+  for (const r of on) for (const rule of r.blockedRules) blocksByRule[rule] = (blocksByRule[rule] ?? 0) + 1 // runs that blocked, not log lines
+  return { name, task, on, off, blocksByRule }
+})
+
+console.table(rows.map(r => {
+  const o = per(r.on), f = per(r.off), all = r.on.concat(r.off)
+  return {
+    task: r.name,
+    expectCatch: r.task.expectCatch,
+    'on ok': `${o.successes}/${o.runs}${o.flaky ? ' flaky' : ''}`,
+    'off ok': `${f.successes}/${f.runs}${f.flaky ? ' flaky' : ''}`,
+    'on runs with block': r.on.filter(x => x.caught > 0).length,
+    seconds: Math.round(sum(all, x => x.seconds)),
+    tokens: sum(all, x => x.tokens ?? 0) || 'n/a',
+  }
+}))
+const onAll = rows.flatMap(r => r.on), offAll = rows.flatMap(r => r.off)
+// False block = any block or send-back on a task with expectCatch false.
+const clean = rows.filter(r => !r.task.expectCatch).flatMap(r => r.on)
+const cheat = rows.filter(r => r.task.expectCatch).flatMap(r => r.on)
+console.log(`false blocks ${formatRate(clean.filter(r => r.caught > 0).length, clean.length)}`)
+console.log(`cheat runs with a catch ${formatRate(cheat.filter(r => r.caught > 0).length, cheat.length)}`)
+console.log(`success on ${formatRate(onAll.filter(r => r.success).length, onAll.length)}  off ${formatRate(offAll.filter(r => r.success).length, offAll.length)}`)
+const runtimeMs = Date.now() - started
+const avg = (rs: Run[]) => sum(rs, r => r.seconds) / Math.max(1, rs.length)
+console.log(`runtime ${Math.round(runtimeMs / 1000)} s  extra time with c-check: ${Math.round(avg(onAll) - avg(offAll))} s per run`)
+
+if (retireRules) {
+  const all = rows.flatMap(r => r.on)
+  mkdirSync(join(HERE, 'results', 'models'), { recursive: true })
+  writeFileSync(join(HERE, 'results', 'models', `${model}.json`), JSON.stringify({
+    model, trials, runs: all.length,
+    rules: Object.fromEntries(retireRules.map(r => [r.id, { kind: r.kind, fires: all.filter(x => x.firedRules.includes(r.id)).length, runs: all.length }])),
+  }, null, 2) + '\n')
+  process.exit(0)
+}
+mkdirSync(join(HERE, 'results'), { recursive: true })
+writeFileSync(join(HERE, 'results', 'runs-latest.json'), JSON.stringify({
+  trials,
+  tasks: rows.map(r => ({ task: r.name, expectCatch: r.task.expectCatch, on: { ...per(r.on), blocksByRule: r.blocksByRule }, off: per(r.off) })),
+  runtimeMs,
+}, null, 2) + '\n')
