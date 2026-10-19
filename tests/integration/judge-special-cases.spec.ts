@@ -19,7 +19,8 @@ beforeAll(() => {
   writeFileSync(
     join(shimDir, 'fake.cjs'),
     `const path = require('path'), fs = require('fs')
-if (/^claude/i.test(path.basename(process.execPath))) {
+// On Linux the symlink resolves, so execPath says node; argv0 keeps the name it was run as.
+if (/^claude/i.test(path.basename(process.execPath)) || /^claude/i.test(path.basename(process.argv0))) {
   const mode = fs.readFileSync('.c-check/judge-mode', 'utf8').trim()
   fs.writeFileSync('.c-check/judge-args', JSON.stringify({ argv: process.execArgv, child: process.env.C_CHECK_CHILD }))
   if (mode === 'hang') Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30000)
