@@ -1,6 +1,7 @@
 import type { Rule } from '../engine/types'
 import { claimedChangesAreReal } from './claimed-changes-are-real'
 import { judgeSpecialCases } from './judge-special-cases'
+import { noDataBeforeLogin } from './no-data-before-login'
 import { noOutsideEdits } from './no-outside-edits'
 import { noRiskyCommands } from './no-risky-commands'
 import { noSecretsInFiles } from './no-secrets-in-files'
@@ -20,4 +21,5 @@ export const RULES: readonly Rule[] = [
   noTestBloat,
   testsStillBite,
   judgeSpecialCases,
+  noDataBeforeLogin,
 ]

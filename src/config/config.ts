@@ -25,6 +25,7 @@ export const DEFAULTS: Config = {
     'no-test-bloat': { mode: 'observe', unitTestDir: 'tests/unit', maxTestToSourceRatio: 2, maxNewTestCases: 5 },
     'tests-still-bite': { mode: 'observe' },
     'judge-special-cases': { mode: 'off', maxDiffLines: 400, timeoutSec: 60, model: 'sonnet' },
+    'no-data-before-login': { mode: 'observe' },
   },
   maxSendBacks: 3,
   logDir: '.c-check/logs',
