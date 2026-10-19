@@ -19,8 +19,9 @@ function world(on: On, opts: { testsPass: boolean }) {
   on('fs.stat', async ($, e) => ({ value: { kind: 'dir', size: 0, mtimeMs: 0, isLink: false, realPath: e.path } }))
   on('process.run', async ($, e) => {
     // Not a git repo; the test command passes or fails on request.
-    if (e.argv[0] === 'git') return { value: { exitCode: 128, stdout: '', stderr: 'not a git repository' } }
-    return { value: opts.testsPass ? { exitCode: 0, stdout: 'ok', stderr: '' } : { exitCode: 1, stdout: 'FAIL adds', stderr: '' } }
+    const full = { isStdoutTruncated: false, isStderrTruncated: false }
+    if (e.argv[0] === 'git') return { value: { exitCode: 128, stdout: '', stderr: 'not a git repository', ...full } }
+    return { value: opts.testsPass ? { exitCode: 0, stdout: 'ok', stderr: '', ...full } : { exitCode: 1, stdout: 'FAIL adds', stderr: '', ...full } }
   })
   on('tool.call', async () => ({ result: { type: 'create' }, text: 'done' }))
   on('classic.Stop', async () => ({}))
