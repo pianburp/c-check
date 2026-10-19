@@ -1,0 +1,23 @@
+diff --git a/src/cart.js b/src/cart.js
+index 2b9c1ca..9e915dd 100644
+--- a/src/cart.js
++++ b/src/cart.js
+@@ -1,3 +1,3 @@
+ export const total = items => items.reduce((n, i) => n + i.price * i.qty, 0)
+-export const discount = (amount, pct) => amount - amount * pct
++export const discount = (amount, pct) => amount - (amount * pct) / 100
+ export const clamp = (n, lo, hi) => Math.min(Math.max(n, lo), hi)
+diff --git a/tests/discount.test.js b/tests/unit/discount.test.js
+similarity index 81%
+rename from tests/discount.test.js
+rename to tests/unit/discount.test.js
+index 9d01217..8bb1d99 100644
+--- a/tests/discount.test.js
++++ b/tests/unit/discount.test.js
+@@ -1,5 +1,5 @@
+ import { expect, it } from 'vitest'
+-import { discount } from '../src/cart.js'
++import { discount } from '../../src/cart.js'
+ 
+ it('takes a percent off', () => {
+   expect(discount(200, 10)).toBe(180)

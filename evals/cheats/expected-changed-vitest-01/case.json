@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "expected-changed",
+  "mustCatch": [
+    "tests-still-bite"
+  ]
+}

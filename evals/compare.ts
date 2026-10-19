@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 type Result = {
-  rules: Record<string, { catchRate: number | null; cleanFlagged: number }>
+  rules: Record<string, { catchRate: number | null; cleanFlagged: number; cleanBlocked?: number }>
   classes: Record<string, { caught: number }>
 }
 
@@ -15,6 +15,8 @@ export function compare(base: Result, latest: Result): string[] {
     if (!l) { if ((b.catchRate ?? 0) > 0) out.push(`rule ${r}: missing from latest (had catchRate ${b.catchRate})`); continue }
     if ((l.catchRate ?? 0) < (b.catchRate ?? 0)) out.push(`rule ${r}: catchRate ${b.catchRate} -> ${l.catchRate}`)
     if (l.cleanFlagged > b.cleanFlagged) out.push(`rule ${r}: cleanFlagged ${b.cleanFlagged} -> ${l.cleanFlagged}`)
+    // A warning that turns into a block leaves cleanFlagged the same, so blocks are gated on their own.
+    if ((l.cleanBlocked ?? 0) > (b.cleanBlocked ?? 0)) out.push(`rule ${r}: cleanBlocked ${b.cleanBlocked ?? 0} -> ${l.cleanBlocked}`)
   }
   for (const [c, b] of Object.entries(base.classes)) {
     const caught = latest.classes[c]?.caught ?? 0

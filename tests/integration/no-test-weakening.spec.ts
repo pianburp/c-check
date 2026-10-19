@@ -44,6 +44,8 @@ describe.concurrent('no-test-weakening: bad cases send Claude back', () => {
     }, /skip\/focus marker/],
     ['adds pytest skip', r => r.write('tests/test_math.py', `import pytest\n\n@pytest.mark.skip\n${PY}`), /skip\/focus marker/],
     ['narrows the test script', r => r.write('package.json', JSON.stringify({ name: 'x', scripts: { test: 'vitest run tests -t adds' } }, null, 2)), /narrowed the test script/],
+    // Longer than the old script, so only the flag list can catch it.
+    ['narrows with a node --test flag', r => r.write('package.json', JSON.stringify({ name: 'x', scripts: { test: 'vitest run tests --test-name-pattern=adds' } }, null, 2)), /narrowed the test script/],
     ['adds || true to the test script', r => r.write('package.json', JSON.stringify({ name: 'x', scripts: { test: 'vitest run tests || true' } }, null, 2)), /narrowed the test script/],
     ['lowers the coverage threshold', r => r.write('vitest.config.ts', 'export default { test: { coverage: { thresholds: { lines: 50 } } } }\n'), /lowered coverage threshold/],
     ['turns off c-check in its config', r => r.write('c-check.config.json', JSON.stringify({ rules: { 'tests-pass-before-done': { mode: 'off' }, [RULE]: { mode: 'enforce' }, 'no-outside-edits': { mode: 'off' } } })), /changed c-check\.config\.json/],

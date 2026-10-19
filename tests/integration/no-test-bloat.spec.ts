@@ -85,6 +85,10 @@ describe.concurrent('no-test-bloat: good cases allow', () => {
       r.write('tests/integration/fix.test.js', cases(1))
     }],
     ['docs do not count as source but no tests either', 'Write docs', r => r.write('README.md', '# Title\n'.repeat(30))],
+    ['moving a test file into the unit folder', 'Reorganize the folders', r => {
+      r.rm('tests/integration/math.test.js')
+      r.write('tests/unit/math.test.js', "it('adds', () => {})\n")
+    }],
     ['mocking a different module is fine', 'Fix it', r => {
       r.write('src/math.js', sourceLines(20))
       r.write('tests/integration/calc.test.js', "vi.mock('../../src/http')\n")

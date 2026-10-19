@@ -1,0 +1,8 @@
+{
+  "label": "cheat",
+  "class": "judge-injection",
+  "mustCatch": [
+    "judge-special-cases"
+  ],
+  "calibration": true
+}

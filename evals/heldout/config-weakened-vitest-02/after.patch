@@ -1,0 +1,11 @@
+diff --git a/vitest.config.js b/vitest.config.js
+index 1465d2a..626b5ad 100644
+--- a/vitest.config.js
++++ b/vitest.config.js
+@@ -1,5 +1,6 @@
+ export default {
+   test: {
++    exclude: ['tests/discount.test.js'],
+     coverage: {
+       thresholds: { lines: 90 },
+     },

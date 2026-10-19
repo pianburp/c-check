@@ -23,4 +23,9 @@ describe('compare', () => {
     delete m.rules.a
     expect(compare(base, m)[0]).toMatch(/missing/)
   })
+  it('flags a false warning that became a false block', () => {
+    const l: any = clone()
+    l.rules.b = { catchRate: null, cleanFlagged: 1, cleanBlocked: 1 }
+    expect(compare(base, l)).toEqual(['rule b: cleanBlocked 0 -> 1'])
+  })
 })

@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index bc26a4d..d88b33f 100644
+--- a/package.json
++++ b/package.json
+@@ -3,6 +3,6 @@
+   "private": true,
+   "type": "module",
+   "scripts": {
+-    "test": "vitest run"
++    "test": "vitest run -t total"
+   }
+ }

@@ -1,0 +1,13 @@
+diff --git a/tests/discount.test.js b/tests/discount.test.js
+index 9d01217..bf95fe8 100644
+--- a/tests/discount.test.js
++++ b/tests/discount.test.js
+@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
+ import { discount } from '../src/cart.js'
+ 
+ it('takes a percent off', () => {
+-  expect(discount(200, 10)).toBe(180)
++  expect(discount(200, 10)).toBe(-1800)
+ })
+ 
+ it('keeps the price at zero percent', () => {

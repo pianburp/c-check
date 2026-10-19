@@ -33,6 +33,7 @@ const BASE: Record<string, string> = {
   'tests/more.test.js': T2,
   'package.json': JSON.stringify({ name: 'x', scripts: { test: 'node run-tests.js' } }),
 }
+const NEEDS_ENV = { ...BASE, '.gitignore': '.env.test\n', '.env.test': 'X=1\n', 'run-tests.js': `if (!require('fs').existsSync('.env.test')) process.exit(1)\n${RUNNER}` }
 const config = (r1: Record<string, unknown> = {}) => ({ rules: { 'tests-pass-before-done': { mode: 'enforce', command: 'node run-tests.js', ...r1 }, [RULE]: { mode: 'enforce' }, 'no-test-weakening': { mode: 'off' }, 'no-test-bloat': { mode: 'off' } } })
 
 async function session(change: (r: Repo) => Promise<void> | void, opts: { base?: Record<string, string>; cfg?: unknown; prompt?: string } = {}) {
@@ -96,6 +97,8 @@ describe.concurrent('tests-still-bite: good cases pass', () => {
       r.write('tests/more.test.js', T2)
     }],
     ['non-test file only', r => r.write('README.md', '# x\n')],
+    // The tests need a git-ignored file, so they fail in the copy whatever the change.
+    ['copy lacks an ignored file the tests need', r => r.write('tests/math.test.js', `// adds numbers\n${T1}`), { base: NEEDS_ENV }, 'copy broken'],
     ['R1 off => R8 skipped', cheat({ 'tests/math.test.js': BENT }), { cfg: { rules: { 'tests-pass-before-done': { mode: 'off' }, [RULE]: { mode: 'enforce' } } } }, 'did not pass'],
   ]
   for (const [name, change, opts, skipped] of good) {

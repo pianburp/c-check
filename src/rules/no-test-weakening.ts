@@ -8,7 +8,7 @@ const ID = 'no-test-weakening'
 export const TEST_CASE = /^\s*(?:(?:it|test|specify)(?:\.each\s*(?:\(.*?\)|`[^`]*`))?\s*\(|def\s+test_\w*\s*\(|func\s+Test\w*\s*\(|@Test\b|#\[test\])/
 const SKIP_MARKER =
   /\b(?:it|test|describe|context|suite)\.(?:skip|only|todo)\b|\b(?:xit|xtest|xdescribe|xcontext|fit|fdescribe|ftest)\s*\(|@pytest\.mark\.(?:skip|skipif|xfail)\b|\bpytest\.skip\s*\(|@unittest\.skip|@Disabled\b|@Ignore\b|\bt\.Skip(?:Now|f)?\s*\(|#\[ignore\]/
-const NARROWING = /\|\|\s*(?:true|exit\s+0)|;\s*exit\s+0|--passWithNoTests|--testNamePattern|--testPathPattern|--testPathIgnorePatterns|\s-t\s|--grep\b|\s-k\s|--deselect|--ignore\b|--exclude\b/
+const NARROWING = /\|\|\s*(?:true|exit\s+0)|;\s*exit\s+0|--passWithNoTests|--testNamePattern|--test-name-pattern|--test-skip-pattern|--test-only|--testPathPattern|--testPathIgnorePatterns|\s-t\s|--grep\b|\s-k\s|--deselect|--ignore\b|--exclude\b/
 const COVERAGE = /\b(branches|functions|lines|statements|threshold|fail_under|fail-under|min_coverage|minimum_coverage)\b\D{0,20}(\d+(?:\.\d+)?)/i
 const TEST_CONFIG = /(^|\/)(jest|vitest|vite|karma|mocha|ava|playwright|cypress)\.config\.[^/]+$|(^|\/)(\.mocharc[^/]*|\.nycrc[^/]*|pytest\.ini|tox\.ini|setup\.cfg|pyproject\.toml|phpunit\.xml[^/]*|\.c8rc[^/]*)$/
 const EXCLUDE_KEY = /\b(exclude|testPathIgnorePatterns|modulePathIgnorePatterns|ignore|testIgnore|norecursedirs|addopts)\b/

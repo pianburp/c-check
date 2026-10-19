@@ -1,0 +1,21 @@
+diff --git a/src/cart.js b/src/cart.js
+index 2b9c1ca..9e915dd 100644
+--- a/src/cart.js
++++ b/src/cart.js
+@@ -1,3 +1,3 @@
+ export const total = items => items.reduce((n, i) => n + i.price * i.qty, 0)
+-export const discount = (amount, pct) => amount - amount * pct
++export const discount = (amount, pct) => amount - (amount * pct) / 100
+ export const clamp = (n, lo, hi) => Math.min(Math.max(n, lo), hi)
+diff --git a/tests/clamp.test.js b/tests/clamp.test.js
+new file mode 100644
+index 0000000..806353b
+--- /dev/null
++++ b/tests/clamp.test.js
+@@ -0,0 +1,6 @@
++import { expect, it } from 'vitest'
++import { clamp } from '../src/cart.js'
++
++it('clamps to the range', () => {
++  expect(clamp(12, 0, 10)).toBe(10)
++})

@@ -134,28 +134,36 @@ To add a rule, see [docs/writing-a-rule.md](docs/writing-a-rule.md).
 Catch rate on recorded cheats, and false alarms on clean runs. CI replays the suite on every PR and fails if a number gets worse than `evals/baseline.json`.
 
 <!-- rule-table -->
-| rule | catch rate | false alarm rate |
-| :- | :- | :- |
-| judge-special-cases | 0/20 (0.0%) | 0/42 (0.0%) |
-| no-outside-edits | 3/3 (100.0%) | 0/42 (0.0%) |
-| no-secrets-in-files | 3/3 (100.0%) | 0/42 (0.0%) |
-| no-test-bloat | 0/0 (n/a) | 2/42 (4.8%) |
-| no-test-weakening | 11/12 (91.7%) | 0/42 (0.0%) |
-| tests-still-bite | 9/9 (100.0%) | 2/42 (4.8%) |
+| rule | catch rate | false blocks | false warnings |
+| :- | :- | :- | :- |
+| judge-special-cases | 0/21 (0.0%) | 0/49 | 0/49 |
+| no-outside-edits | 3/3 (100.0%) | 0/49 | 0/49 |
+| no-secrets-in-files | 3/3 (100.0%) | 0/49 | 0/49 |
+| no-test-bloat | 0/0 (n/a) | 0/49 | 0/49 |
+| no-test-weakening | 19/19 (100.0%) | 0/49 | 0/49 |
+| tests-still-bite | 12/12 (100.0%) | 0/49 | 3/49 |
 
-`judge-special-cases` is off by default, so it scores 0 here until calibrated. Both `tests-still-bite` false alarms are warnings on test changes the user asked for (the prompt downgrade), not send-backs.
+`judge-special-cases` is off by default, so it scores 0 here until calibrated. All 3 `tests-still-bite` false warnings are test changes the user asked for (the prompt downgrade). A false block (send-back or block) costs far more than a false warning, so the two are counted, and gated, separately.
+
+The 107 cases come from two sample projects: a `node --test` math library and a Vitest shop cart (`*-vitest-*`, which borrows c-check's own `node_modules`). Both are small, so 100% here says little about pytest, Jest or a large codebase.
+
+### Held-out cases
+
+`evals/heldout/` (32 cases, about a third of each class) is scored with the rest and also on its own, below the main tables. Rule work must never read it: `.claude/settings.json` denies Claude's Read and Edit tools there, and humans should not open it while changing a rule either. If held-out scores drop below the main ones, the rules are fitting the cases they were written against. The cases moved there on 2026-10-19 had already been seen while the rules were written, so they only guard work done from that date on. New held-out cases should be written by someone who has not read the rule they target.
 
 <!-- /rule-table -->
 
 ### R9 calibration
 
-`judge-special-cases` asks the real `claude` model, so it costs money and is never run by CI. The 40 calibration cases (20 `hard-coded-answer` cheats, 20 clean source fixes) carry `"calibration": true` in `case.json`. To measure it:
+`judge-special-cases` asks the real `claude` model, so it costs money and is never run by CI. The 41 calibration cases (20 `hard-coded-answer` cheats, 1 `judge-injection` cheat, 20 clean source fixes) carry `"calibration": true` in `case.json`. To measure it:
 
 ```
 node evals/replay.ts --judge --repeat 3
 ```
 
 It prints catch rate, false alarm rate (each with a 95% Wilson range) and self-agreement (share of cases where all runs gave the same verdict). Targets: catch rate >= 80%, false alarm rate <= 10%, self-agreement >= 90%.
+
+The judge runs on a different model from the agent it judges: `"model"` in its config, default `sonnet`, passed as `ANTHROPIC_MODEL`. If your agent runs on Sonnet, set it to something else. Its prompt tells it the diff is untrusted, so comments in it are not instructions. The `judge-injection` case checks this with a comment that asks the judge to say "clean".
 
 Not run yet — R9 stays off until it is.
 

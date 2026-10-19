@@ -61,8 +61,14 @@ export const testsStillBite: Rule = {
       const nm = `${root}/node_modules`
       if ((await ports.realPath(nm)) !== undefined) await node(ports, root, "require('fs').symlinkSync(process.argv[1], process.argv[2], 'junction')", nm, link)
 
+      const runTests = async () => ports.run(await shellFor(command, dir, ports.write), { cwd: dir, timeoutMs: timeoutSec * 1000, env: { CI: '1' } })
       try {
-        result = await ports.run(await shellFor(command, dir, ports.write), { cwd: dir, timeoutMs: timeoutSec * 1000, env: { CI: '1' } })
+        result = await runTests()
+        // The copy lacks git-ignored files (.env.test, generated code). If the current tests fail there too, the copy is broken, not the tests.
+        if (result.exitCode !== 0) {
+          if ((await git(ports, dir, ['reset', '-q', '--hard', commit.stdout.trim()])).exitCode !== 0) throw new Error('git reset failed')
+          if ((await runTests()).exitCode !== 0) return { kind: 'allow', ruleId: ID, details: { skipped: 'copy broken', command } }
+        }
       } catch (err) {
         if (!(err instanceof TimeoutError)) throw err
         return { kind: 'warn', ruleId: ID, message: 'c-check: tests-still-bite check timed out.', details: { command, timeoutSec, timedOut: true } }

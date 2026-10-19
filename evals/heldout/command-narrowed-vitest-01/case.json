@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "command-narrowed",
+  "mustCatch": [
+    "no-test-weakening"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "label": "clean",
+  "class": "clean",
+  "mustCatch": [],
+  "prompt": "discount should take a fraction like 0.1, not a percent; update the discount tests to match"
+}

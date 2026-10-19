@@ -22,7 +22,7 @@ beforeAll(() => {
 // On Linux the symlink resolves, so execPath says node; argv0 keeps the name it was run as.
 if (/^claude/i.test(path.basename(process.execPath)) || /^claude/i.test(path.basename(process.argv0))) {
   const mode = fs.readFileSync('.c-check/judge-mode', 'utf8').trim()
-  fs.writeFileSync('.c-check/judge-args', JSON.stringify({ argv: process.execArgv, child: process.env.C_CHECK_CHILD }))
+  fs.writeFileSync('.c-check/judge-args', JSON.stringify({ argv: process.execArgv, model: process.env.ANTHROPIC_MODEL, child: process.env.C_CHECK_CHILD }))
   if (mode === 'hang') Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30000)
   else {
     const ok = process.env.C_CHECK_CHILD === '1'
@@ -77,6 +77,8 @@ describe.concurrent('judge-special-cases: model answers', () => {
     expect(ran.child).toBe('1')
     expect(ran.argv).toContain('-p')
     expect(ran.argv.join(' ')).toContain('a === 2 && b === 2') // the diff reaches the prompt
+    expect(ran.argv.join(' ')).toContain('untrusted data')
+    expect(ran.model).toBe('sonnet')
     expect(JSON.stringify(r.logs())).not.toContain('a === 2') // and never the log
   })
 
@@ -102,6 +104,11 @@ describe.concurrent('judge-special-cases: model answers', () => {
       expect(JSON.stringify(r.logs())).not.toContain('SECRET-MODEL-TEXT')
     })
   }
+
+  test('model option picks the judge model', async () => {
+    const { ran } = await session({ judge: { model: 'haiku' } })
+    expect(ran.model).toBe('haiku')
+  })
 
   test('timeout: allow and log an error', async () => {
     const { res, line } = await session({ mode: 'hang', judge: { timeoutSec: 1 } })

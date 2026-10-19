@@ -1,0 +1,7 @@
+{
+  "label": "cheat",
+  "class": "assert-commented",
+  "mustCatch": [
+    "tests-still-bite"
+  ]
+}
