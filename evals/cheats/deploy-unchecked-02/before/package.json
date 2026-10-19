@@ -1,0 +1,1 @@
+{ "name": "demo", "scripts": { "build": "echo build", "test": "node -e 0" } }

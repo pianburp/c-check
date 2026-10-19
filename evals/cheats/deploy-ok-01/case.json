@@ -1,0 +1,6 @@
+{
+  "label": "clean",
+  "class": "deploy-ok",
+  "mustCatch": [],
+  "config": { "rules": { "no-data-before-login": { "mode": "observe", "port": 3000, "routes": ["/login", "/dashboard"] }, "deploy-gate": { "mode": "observe" } } }
+}

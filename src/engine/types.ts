@@ -87,6 +87,10 @@ export interface SessionState {
   prompts: string[]
   /** Tree hash at the last passing test run, so unchanged code is not re-tested. */
   lastGreenTree?: string
+  /** Tree hash R10 last checked for data leaks and found clean. Not set when R10 skipped. R11 deploys only on this tree. */
+  leakCheckPassedTree?: string
+  /** Working tree hash for R11's deploy check, so a snapshot (slow on Windows) is not taken per check. Set by R10 and R11, cleared by R11 after any tool that is not read-only. */
+  treeCache?: string
   /** Set by R1 on each end event: resolves true when its tests passed. Absent when R1 is off. */
   r1Passed?: Promise<boolean>
   /** Messages already shown once (config warnings). */

@@ -1,4 +1,5 @@
-import { TimeoutError, type Rule, type RuleContext, type Verdict } from '../engine/types'
+import { TimeoutError, type Rule, type RuleConfig, type RuleContext, type Verdict } from '../engine/types'
+import { snapshot } from './git'
 
 const ID = 'no-data-before-login'
 const MAX_BODY = 2 * 1024 * 1024
@@ -47,9 +48,10 @@ export const noDataBeforeLogin: Rule = {
   defaultMode: 'observe',
   async check(event, ctx) {
     const skip = (why: string): Verdict => ({ kind: 'allow', ruleId: ID, details: { skipped: why } })
-    const port = ctx.config.port
-    const routes = Array.isArray(ctx.config.routes) ? ctx.config.routes.filter((r): r is string => typeof r === 'string' && r.startsWith('/')) : []
-    if (typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65535 || routes.length === 0) return skip('not configured')
+    const { port, routes } = leakCheckTarget(ctx.config)
+    if (port === undefined) return skip('not configured')
+    // Taken before the requests, so the recorded tree is never newer than what the server answered.
+    const tree = (await snapshot(ctx.ports, event.projectRoot, event.sessionId).catch(() => null))?.tree
 
     // Never logs body text, headers or URLs: only the route and counts.
     const get = (path: string) => fetchPath(`http://127.0.0.1:${port}${path}`, event.projectRoot, ctx)
@@ -74,8 +76,18 @@ export const noDataBeforeLogin: Rule = {
       replies.push({ route, status, bodies })
       logged.push({ route, status, bodyChars: body.length, scripts: bodies.length - 1 })
     }
+    // A route that failed was not checked, so it cannot count as a pass.
+    if (replies.length === routes.length && tree !== undefined) ctx.state.leakCheckPassedTree = ctx.state.treeCache = tree
     return { kind: 'allow', ruleId: ID, details: { routes: logged } }
   },
+}
+
+/** The port and routes R10 checks; port is undefined when R10 is not configured. R11 uses the same test. */
+export function leakCheckTarget(config: RuleConfig): { port: number | undefined; routes: string[] } {
+  const { port } = config
+  const routes = Array.isArray(config.routes) ? config.routes.filter((r): r is string => typeof r === 'string' && r.startsWith('/')) : []
+  const ok = typeof port === 'number' && Number.isInteger(port) && port >= 1 && port <= 65535 && routes.length > 0
+  return { port: ok ? port : undefined, routes }
 }
 
 /** curl -i output; null when this request failed (fail open); 'no app' when nothing listens; 'no curl' when curl cannot run. No -L: a redirect is data. */

@@ -9,7 +9,8 @@
     "no-test-bloat": { "mode": "observe", "unitTestDir": "tests/unit", "maxTestToSourceRatio": 2, "maxNewTestCases": 5 },
     "tests-still-bite": { "mode": "observe" },
     "judge-special-cases": { "mode": "off", "maxDiffLines": 400, "timeoutSec": 60, "model": "sonnet" },
-    "no-data-before-login": { "mode": "observe", "port": 3000, "routes": ["/dashboard"], "allowEmails": [] }
+    "no-data-before-login": { "mode": "observe", "port": 3000, "routes": ["/dashboard"], "allowEmails": [] },
+    "deploy-gate": { "mode": "observe", "extraPatterns": [], "allowPatterns": [] }
   },
   "maxSendBacks": 3,
   "logDir": ".c-check/logs"

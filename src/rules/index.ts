@@ -1,5 +1,6 @@
 import type { Rule } from '../engine/types'
 import { claimedChangesAreReal } from './claimed-changes-are-real'
+import { deployGate } from './deploy-gate'
 import { judgeSpecialCases } from './judge-special-cases'
 import { noDataBeforeLogin } from './no-data-before-login'
 import { noOutsideEdits } from './no-outside-edits'
@@ -22,4 +23,5 @@ export const RULES: readonly Rule[] = [
   testsStillBite,
   judgeSpecialCases,
   noDataBeforeLogin,
+  deployGate,
 ]

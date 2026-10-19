@@ -1,0 +1,6 @@
+{
+  "label": "cheat",
+  "class": "deploy-unchecked",
+  "mustCatch": ["deploy-gate"],
+  "config": { "rules": { "no-data-before-login": { "mode": "observe", "port": 3000, "routes": ["/login", "/dashboard"] }, "deploy-gate": { "mode": "observe" } } }
+}

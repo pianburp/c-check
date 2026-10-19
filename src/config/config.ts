@@ -26,6 +26,7 @@ export const DEFAULTS: Config = {
     'tests-still-bite': { mode: 'observe' },
     'judge-special-cases': { mode: 'off', maxDiffLines: 400, timeoutSec: 60, model: 'sonnet' },
     'no-data-before-login': { mode: 'observe' },
+    'deploy-gate': { mode: 'observe', extraPatterns: [], allowPatterns: [] },
   },
   maxSendBacks: 3,
   logDir: '.c-check/logs',

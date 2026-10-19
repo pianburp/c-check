@@ -12,12 +12,12 @@ export const DENY_PATTERNS: ReadonlyArray<{ name: string; re: RegExp }> = [
   { name: 'pipe download to shell', re: /\b(?:curl|wget|iwr|Invoke-WebRequest)\b[^;&\n]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh|dash|ksh|python3?|iex|Invoke-Expression)\b/i },
 ]
 
-/** Splits a command into simple commands on ; && || | and newlines, then into words. Quotes are stripped, not parsed. */
+/** Splits a command into simple commands on ; && || | and newlines. */
+export const splitCommands = (command: string): string[] => command.split(/;|&&|\|\||\||\n/).map(s => s.trim()).filter(Boolean)
+
+/** Simple commands as words. Quotes are stripped, not parsed. */
 const simpleCommands = (command: string): string[][] =>
-  command
-    .split(/;|&&|\|\||\||\n/)
-    .map(s => s.trim().split(/\s+/).map(w => w.replace(/^["']|["']$/g, '')).filter(Boolean))
-    .filter(ws => ws.length > 0)
+  splitCommands(command).map(s => s.split(/\s+/).map(w => w.replace(/^["']|["']$/g, '')).filter(Boolean))
 
 /** `rm` with both recursive and force flags, aimed at /, ~, or a path outside the project. */
 function dangerousRm(command: string, root: string): string | undefined {
@@ -38,7 +38,7 @@ function dangerousRm(command: string, root: string): string | undefined {
   return undefined
 }
 
-function compile(patterns: unknown): RegExp[] {
+export function compile(patterns: unknown): RegExp[] {
   if (!Array.isArray(patterns)) return []
   return patterns.flatMap(p => {
     try {

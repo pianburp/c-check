@@ -1,0 +1,6 @@
+{
+  "label": "clean",
+  "class": "deploy-ok",
+  "mustCatch": [],
+  "config": { "rules": { "deploy-gate": { "mode": "observe" } } }
+}
