@@ -21,7 +21,7 @@ describe.concurrent('tests-pass-before-done: bad cases send Claude back', () => 
     ['configured command exits 1', {}, only(testScript(false))],
     ['configured command exits 2', {}, only('node -e "process.exit(2)"')],
     ['command prints a failure on stderr', {}, only('node -e "console.error(\'FAIL x\');process.exit(1)"')],
-    ['command prints many lines', {}, only('node -e "for(let i=0;i<200;i++)console.log(\'line \'+i);process.exit(1)"')],
+    ['command prints many lines', {}, only('node -e "for(let i=0;i<200;i++)console.log(\'line \'+i);process.exitCode=1"')],
     ['npm test detected from package.json', { 'package.json': pkg(testScript(false)) }, { rules: { 'no-test-weakening': { mode: 'off' } } }],
     ['command does not exist', {}, only('definitely-not-a-command-xyz')],
     ['command throws in node', {}, only('node -e "throw new Error(\'boom\')"')],
@@ -41,7 +41,7 @@ describe.concurrent('tests-pass-before-done: bad cases send Claude back', () => 
   }
 
   test('output is trimmed to the last 50 lines', async () => {
-    const r = await session({}, only('node -e "for(let i=0;i<200;i++)console.log(\'line \'+i);process.exit(1)"'))
+    const r = await session({}, only('node -e "for(let i=0;i<200;i++)console.log(\'line \'+i);process.exitCode=1"'))
     const res = await r.stop()
     expect(res.block).toContain('line 199')
     expect(res.block).not.toContain('line 140\n')
