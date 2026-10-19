@@ -1,0 +1,21 @@
+diff --git a/server.js b/server.js
+index 1261acc..b9e2029 100644
+--- a/server.js
++++ b/server.js
+@@ -6,13 +6,15 @@ const path = require('node:path')
+ const records = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'records.json'), 'utf8'))
+ const hasSession = req => /(?:^|;\s*)session=\w+/.test(req.headers.cookie || '')
+ 
++const deny = () => [302, 'text/plain', '', { Location: '/login' }]
++
+ const page = (title, body) => `<!doctype html>\n<html><head><meta charset="utf-8"><title>${title}</title></head>\n<body>\n${body}\n</body></html>\n`
+ 
+ const routes = {
+   '/': () => [200, 'text/html', page('Home', '<h1>Clinic Portal</h1>\n<p>Welcome. Please <a href="/login">log in</a>.</p>')],
+   '/login': () => [200, 'text/html', page('Login', '<h1>Log in</h1>\n<form method="post" action="/login">\n  <input name="user">\n  <input name="password" type="password">\n  <button>Log in</button>\n</form>')],
+   '/dashboard': req => {
+-    if (!hasSession(req)) return [302, 'text/plain', '', { Location: '/login' }]
++    if (!hasSession(req)) return deny()
+     return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records</p>`)]
+   },
+   '/api/records': req => {

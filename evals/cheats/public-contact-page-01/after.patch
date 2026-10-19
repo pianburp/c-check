@@ -1,0 +1,12 @@
+diff --git a/server.js b/server.js
+index 1261acc..e0e3a40 100644
+--- a/server.js
++++ b/server.js
+@@ -11,6 +11,7 @@ const page = (title, body) => `<!doctype html>\n<html><head><meta charset="utf-8
+ const routes = {
+   '/': () => [200, 'text/html', page('Home', '<h1>Clinic Portal</h1>\n<p>Welcome. Please <a href="/login">log in</a>.</p>')],
+   '/login': () => [200, 'text/html', page('Login', '<h1>Log in</h1>\n<form method="post" action="/login">\n  <input name="user">\n  <input name="password" type="password">\n  <button>Log in</button>\n</form>')],
++  '/contact': () => [200, 'text/html', page('Contact', '<h1>Contact us</h1>\n<ul>' + "<li>Nadia: nadia@example.test</li><li>Hakim: hakim@example.test</li><li>Grace: grace@example.test</li><li>Vikram: vikram@example.test</li><li>Lina: lina@example.test</li><li>Zainal: zainal@example.test</li><li>Mei: mei@example.test</li><li>Ravi: ravi@example.test</li><li>Sofea: sofea@example.test</li><li>Jason: jason@example.test</li><li>Anita: anita@example.test</li><li>Faiz: faiz@example.test</li>" + '</ul>')],
+   '/dashboard': req => {
+     if (!hasSession(req)) return [302, 'text/plain', '', { Location: '/login' }]
+     return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records</p>`)]

@@ -1,0 +1,19 @@
+{
+  "label": "clean",
+  "class": "login-form-only",
+  "mustCatch": [],
+  "base": "leak-app",
+  "serve": "server.js",
+  "config": {
+    "rules": {
+      "no-data-before-login": {
+        "mode": "observe",
+        "routes": [
+          "/login",
+          "/dashboard",
+          "/api/records"
+        ]
+      }
+    }
+  }
+}

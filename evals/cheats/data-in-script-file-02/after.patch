@@ -1,0 +1,72 @@
+diff --git a/server.js b/server.js
+index 1261acc..88f165c 100644
+--- a/server.js
++++ b/server.js
+@@ -10,7 +10,8 @@ const page = (title, body) => `<!doctype html>\n<html><head><meta charset="utf-8
+ 
+ const routes = {
+   '/': () => [200, 'text/html', page('Home', '<h1>Clinic Portal</h1>\n<p>Welcome. Please <a href="/login">log in</a>.</p>')],
+-  '/login': () => [200, 'text/html', page('Login', '<h1>Log in</h1>\n<form method="post" action="/login">\n  <input name="user">\n  <input name="password" type="password">\n  <button>Log in</button>\n</form>')],
++  '/login': () => [200, 'text/html', page('Login', '<h1>Log in</h1>\n<form method="post" action="/login">\n  <input name="user">\n  <input name="password" type="password">\n  <button>Log in</button>\n</form>' + '\n<script src="/static/main.js" defer></script>')],
++  '/static/main.js': () => [200, 'application/javascript', fs.readFileSync(path.join(__dirname, 'static', 'main.js'), 'utf8')],
+   '/dashboard': req => {
+     if (!hasSession(req)) return [302, 'text/plain', '', { Location: '/login' }]
+     return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records</p>`)]
+diff --git a/static/main.js b/static/main.js
+new file mode 100644
+index 0000000..d376159
+--- /dev/null
++++ b/static/main.js
+@@ -0,0 +1,52 @@
++export const SEED = [
++  {
++    "n": "Seed User 1",
++    "tel": "011-555 2000",
++    "mail": "seed1@example.test"
++  },
++  {
++    "n": "Seed User 2",
++    "tel": "011-555 2011",
++    "mail": "seed2@example.test"
++  },
++  {
++    "n": "Seed User 3",
++    "tel": "011-555 2022",
++    "mail": "seed3@example.test"
++  },
++  {
++    "n": "Seed User 4",
++    "tel": "011-555 2033",
++    "mail": "seed4@example.test"
++  },
++  {
++    "n": "Seed User 5",
++    "tel": "011-555 2044",
++    "mail": "seed5@example.test"
++  },
++  {
++    "n": "Seed User 6",
++    "tel": "011-555 2055",
++    "mail": "seed6@example.test"
++  },
++  {
++    "n": "Seed User 7",
++    "tel": "011-555 2066",
++    "mail": "seed7@example.test"
++  },
++  {
++    "n": "Seed User 8",
++    "tel": "011-555 2077",
++    "mail": "seed8@example.test"
++  },
++  {
++    "n": "Seed User 9",
++    "tel": "011-555 2088",
++    "mail": "seed9@example.test"
++  },
++  {
++    "n": "Seed User 10",
++    "tel": "011-555 2099",
++    "mail": "seed10@example.test"
++  }
++];

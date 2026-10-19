@@ -1,0 +1,227 @@
+[
+  {
+    "id": 1,
+    "name": "Aiman Rahman",
+    "email": "aiman.rahman@example.test",
+    "phone": "012-555 1000",
+    "ic": "700101-01-5000",
+    "address": "10, Jalan Contoh 1, 50000 Kuala Lumpur",
+    "balance": "0.00"
+  },
+  {
+    "id": 2,
+    "name": "Siti Ahmad",
+    "email": "siti.ahmad@example.test",
+    "phone": "012-555 1037",
+    "ic": "730608-04-5113",
+    "address": "11, Jalan Contoh 2, 50000 Kuala Lumpur",
+    "balance": "137.50"
+  },
+  {
+    "id": 3,
+    "name": "Wei Jie Tan",
+    "email": "wei.tan@example.test",
+    "phone": "012-555 1074",
+    "ic": "761115-07-5226",
+    "address": "12, Jalan Contoh 3, 50000 Kuala Lumpur",
+    "balance": "275.00"
+  },
+  {
+    "id": 4,
+    "name": "Priya Nair",
+    "email": "priya.nair@example.test",
+    "phone": "012-555 1111",
+    "ic": "790422-10-5339",
+    "address": "13, Jalan Contoh 4, 50000 Kuala Lumpur",
+    "balance": "412.50"
+  },
+  {
+    "id": 5,
+    "name": "Farid Ismail",
+    "email": "farid.ismail@example.test",
+    "phone": "012-555 1148",
+    "ic": "820901-13-5452",
+    "address": "14, Jalan Contoh 5, 50000 Kuala Lumpur",
+    "balance": "550.00"
+  },
+  {
+    "id": 6,
+    "name": "Mei Ling Lim",
+    "email": "mei.lim@example.test",
+    "phone": "012-555 1185",
+    "ic": "850208-16-5565",
+    "address": "15, Jalan Contoh 6, 50000 Kuala Lumpur",
+    "balance": "687.50"
+  },
+  {
+    "id": 7,
+    "name": "Arjun Menon",
+    "email": "arjun.menon@example.test",
+    "phone": "012-555 1222",
+    "ic": "880715-03-5678",
+    "address": "16, Jalan Contoh 7, 50000 Kuala Lumpur",
+    "balance": "825.00"
+  },
+  {
+    "id": 8,
+    "name": "Nurul Hassan",
+    "email": "nurul.hassan@example.test",
+    "phone": "012-555 1259",
+    "ic": "911222-06-5791",
+    "address": "17, Jalan Contoh 8, 50000 Kuala Lumpur",
+    "balance": "962.50"
+  },
+  {
+    "id": 9,
+    "name": "Hafiz Karim",
+    "email": "hafiz.karim@example.test",
+    "phone": "012-555 1296",
+    "ic": "940501-09-5904",
+    "address": "18, Jalan Contoh 9, 50000 Kuala Lumpur",
+    "balance": "1100.00"
+  },
+  {
+    "id": 10,
+    "name": "Kavitha Pillai",
+    "email": "kavitha.pillai@example.test",
+    "phone": "012-555 1333",
+    "ic": "971008-12-6017",
+    "address": "19, Jalan Contoh 1, 50000 Kuala Lumpur",
+    "balance": "1237.50"
+  },
+  {
+    "id": 11,
+    "name": "Daniel Wong",
+    "email": "daniel.wong@example.test",
+    "phone": "012-555 1370",
+    "ic": "700315-15-6130",
+    "address": "20, Jalan Contoh 2, 50000 Kuala Lumpur",
+    "balance": "1375.00"
+  },
+  {
+    "id": 12,
+    "name": "Aisyah Yusof",
+    "email": "aisyah.yusof@example.test",
+    "phone": "012-555 1407",
+    "ic": "730822-02-6243",
+    "address": "21, Jalan Contoh 3, 50000 Kuala Lumpur",
+    "balance": "1512.50"
+  },
+  {
+    "id": 13,
+    "name": "Jun Hao Lee",
+    "email": "jun.lee@example.test",
+    "phone": "012-555 1444",
+    "ic": "760101-05-6356",
+    "address": "22, Jalan Contoh 4, 50000 Kuala Lumpur",
+    "balance": "1650.00"
+  },
+  {
+    "id": 14,
+    "name": "Lakshmi Subramaniam",
+    "email": "lakshmi.subramaniam@example.test",
+    "phone": "012-555 1481",
+    "ic": "790608-08-6469",
+    "address": "23, Jalan Contoh 5, 50000 Kuala Lumpur",
+    "balance": "1787.50"
+  },
+  {
+    "id": 15,
+    "name": "Zul Ali",
+    "email": "zul.ali@example.test",
+    "phone": "012-555 1518",
+    "ic": "821115-11-6582",
+    "address": "24, Jalan Contoh 6, 50000 Kuala Lumpur",
+    "balance": "1925.00"
+  },
+  {
+    "id": 16,
+    "name": "Sharon Ng",
+    "email": "sharon.ng@example.test",
+    "phone": "012-555 1555",
+    "ic": "850422-14-6695",
+    "address": "25, Jalan Contoh 7, 50000 Kuala Lumpur",
+    "balance": "62.50"
+  },
+  {
+    "id": 17,
+    "name": "Ravi Kumar",
+    "email": "ravi.kumar@example.test",
+    "phone": "012-555 1592",
+    "ic": "880901-01-6808",
+    "address": "26, Jalan Contoh 8, 50000 Kuala Lumpur",
+    "balance": "200.00"
+  },
+  {
+    "id": 18,
+    "name": "Balqis Zakaria",
+    "email": "balqis.zakaria@example.test",
+    "phone": "012-555 1629",
+    "ic": "910208-04-6921",
+    "address": "27, Jalan Contoh 9, 50000 Kuala Lumpur",
+    "balance": "337.50"
+  },
+  {
+    "id": 19,
+    "name": "Kok Seng Ooi",
+    "email": "kok.ooi@example.test",
+    "phone": "012-555 1666",
+    "ic": "940715-07-7034",
+    "address": "28, Jalan Contoh 1, 50000 Kuala Lumpur",
+    "balance": "475.00"
+  },
+  {
+    "id": 20,
+    "name": "Devi Raj",
+    "email": "devi.raj@example.test",
+    "phone": "012-555 1703",
+    "ic": "971222-10-7147",
+    "address": "29, Jalan Contoh 2, 50000 Kuala Lumpur",
+    "balance": "612.50"
+  },
+  {
+    "id": 21,
+    "name": "Irfan Hamid",
+    "email": "irfan.hamid@example.test",
+    "phone": "012-555 1740",
+    "ic": "700501-13-7260",
+    "address": "30, Jalan Contoh 3, 50000 Kuala Lumpur",
+    "balance": "750.00"
+  },
+  {
+    "id": 22,
+    "name": "Hui Min Chan",
+    "email": "hui.chan@example.test",
+    "phone": "012-555 1777",
+    "ic": "731008-16-7373",
+    "address": "31, Jalan Contoh 4, 50000 Kuala Lumpur",
+    "balance": "887.50"
+  },
+  {
+    "id": 23,
+    "name": "Thanabalan Krishnan",
+    "email": "thanabalan.krishnan@example.test",
+    "phone": "012-555 1814",
+    "ic": "760315-03-7486",
+    "address": "32, Jalan Contoh 5, 50000 Kuala Lumpur",
+    "balance": "1025.00"
+  },
+  {
+    "id": 24,
+    "name": "Amirah Osman",
+    "email": "amirah.osman@example.test",
+    "phone": "012-555 1851",
+    "ic": "790822-06-7599",
+    "address": "33, Jalan Contoh 6, 50000 Kuala Lumpur",
+    "balance": "1162.50"
+  },
+  {
+    "id": 25,
+    "name": "Chong Goh",
+    "email": "chong.goh@example.test",
+    "phone": "012-555 1888",
+    "ic": "820101-09-7712",
+    "address": "34, Jalan Contoh 7, 50000 Kuala Lumpur",
+    "balance": "1300.00"
+  }
+]

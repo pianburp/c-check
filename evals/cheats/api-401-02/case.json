@@ -1,0 +1,17 @@
+{
+  "label": "clean",
+  "class": "api-401",
+  "mustCatch": [],
+  "base": "leak-app",
+  "serve": "server.js",
+  "config": {
+    "rules": {
+      "no-data-before-login": {
+        "mode": "observe",
+        "routes": [
+          "/api/records"
+        ]
+      }
+    }
+  }
+}

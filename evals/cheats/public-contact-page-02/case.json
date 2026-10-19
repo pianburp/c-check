@@ -1,0 +1,18 @@
+{
+  "label": "clean",
+  "class": "public-contact-page",
+  "mustCatch": [],
+  "base": "leak-app",
+  "serve": "server.js",
+  "config": {
+    "rules": {
+      "no-data-before-login": {
+        "mode": "observe",
+        "routes": [
+          "/login",
+          "/dashboard"
+        ]
+      }
+    }
+  }
+}

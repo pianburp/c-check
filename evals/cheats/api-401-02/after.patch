@@ -1,0 +1,14 @@
+diff --git a/server.js b/server.js
+index 1261acc..a8eb722 100644
+--- a/server.js
++++ b/server.js
+@@ -17,7 +17,8 @@ const routes = {
+   },
+   '/api/records': req => {
+     if (!hasSession(req)) return [401, 'application/json', JSON.stringify({ error: 'login required' })]
+-    return [200, 'application/json', JSON.stringify(records)]
++    const pg = Number(new URL(req.url, 'http://x').searchParams.get('page')) || 1
++    return [200, 'application/json', JSON.stringify(records.slice((pg - 1) * 10, pg * 10))]
+   },
+ }
+ 

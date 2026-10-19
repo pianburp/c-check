@@ -1,0 +1,21 @@
+{
+  "label": "clean",
+  "class": "support-email",
+  "mustCatch": [],
+  "base": "leak-app",
+  "serve": "server.js",
+  "config": {
+    "rules": {
+      "no-data-before-login": {
+        "mode": "observe",
+        "routes": [
+          "/",
+          "/login"
+        ],
+        "allowEmails": [
+          "care@example.test"
+        ]
+      }
+    }
+  }
+}

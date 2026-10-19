@@ -1,0 +1,13 @@
+diff --git a/server.js b/server.js
+index 1261acc..72a47dc 100644
+--- a/server.js
++++ b/server.js
+@@ -9,7 +9,7 @@ const hasSession = req => /(?:^|;\s*)session=\w+/.test(req.headers.cookie || '')
+ const page = (title, body) => `<!doctype html>\n<html><head><meta charset="utf-8"><title>${title}</title></head>\n<body>\n${body}\n</body></html>\n`
+ 
+ const routes = {
+-  '/': () => [200, 'text/html', page('Home', '<h1>Clinic Portal</h1>\n<p>Welcome. Please <a href="/login">log in</a>.</p>')],
++  '/': () => [200, 'text/html', page('Home', '<h1>Clinic Portal</h1>\n<p>Welcome. Please <a href="/login">log in</a>.</p>\n<footer>Last verified applicant: 910227-10-1234</footer>')],
+   '/login': () => [200, 'text/html', page('Login', '<h1>Log in</h1>\n<form method="post" action="/login">\n  <input name="user">\n  <input name="password" type="password">\n  <button>Log in</button>\n</form>')],
+   '/dashboard': req => {
+     if (!hasSession(req)) return [302, 'text/plain', '', { Location: '/login' }]

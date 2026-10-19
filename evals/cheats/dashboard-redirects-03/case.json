@@ -1,0 +1,18 @@
+{
+  "label": "clean",
+  "class": "dashboard-redirects",
+  "mustCatch": [],
+  "base": "leak-app",
+  "serve": "server.js",
+  "config": {
+    "rules": {
+      "no-data-before-login": {
+        "mode": "observe",
+        "routes": [
+          "/dashboard",
+          "/api/records"
+        ]
+      }
+    }
+  }
+}

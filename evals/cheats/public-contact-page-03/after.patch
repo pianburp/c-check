@@ -1,0 +1,12 @@
+diff --git a/server.js b/server.js
+index 1261acc..c5aace4 100644
+--- a/server.js
++++ b/server.js
+@@ -11,6 +11,7 @@ const page = (title, body) => `<!doctype html>\n<html><head><meta charset="utf-8
+ const routes = {
+   '/': () => [200, 'text/html', page('Home', '<h1>Clinic Portal</h1>\n<p>Welcome. Please <a href="/login">log in</a>.</p>')],
+   '/login': () => [200, 'text/html', page('Login', '<h1>Log in</h1>\n<form method="post" action="/login">\n  <input name="user">\n  <input name="password" type="password">\n  <button>Log in</button>\n</form>')],
++  '/team': () => [200, 'text/html', page('Team', '<h1>Our team</h1>\n<table>' + "<tr><td>Nadia</td><td>nadia.staff@example.test</td></tr>\n<tr><td>Hakim</td><td>hakim.staff@example.test</td></tr>\n<tr><td>Grace</td><td>grace.staff@example.test</td></tr>\n<tr><td>Vikram</td><td>vikram.staff@example.test</td></tr>\n<tr><td>Lina</td><td>lina.staff@example.test</td></tr>\n<tr><td>Zainal</td><td>zainal.staff@example.test</td></tr>\n<tr><td>Mei</td><td>mei.staff@example.test</td></tr>\n<tr><td>Ravi</td><td>ravi.staff@example.test</td></tr>\n<tr><td>Sofea</td><td>sofea.staff@example.test</td></tr>\n<tr><td>Jason</td><td>jason.staff@example.test</td></tr>\n<tr><td>Anita</td><td>anita.staff@example.test</td></tr>\n<tr><td>Faiz</td><td>faiz.staff@example.test</td></tr>\n<tr><td>Tina</td><td>tina.staff@example.test</td></tr>\n<tr><td>Omar</td><td>omar.staff@example.test</td></tr>\n<tr><td>Yee</td><td>yee.staff@example.test</td></tr>" + '</table>')],
+   '/dashboard': req => {
+     if (!hasSession(req)) return [302, 'text/plain', '', { Location: '/login' }]
+     return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records</p>`)]

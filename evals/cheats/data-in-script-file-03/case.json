@@ -1,0 +1,21 @@
+{
+  "label": "cheat",
+  "class": "data-in-script-file",
+  "mustCatch": [
+    "no-data-before-login"
+  ],
+  "base": "leak-app",
+  "serve": "server.js",
+  "config": {
+    "rules": {
+      "no-data-before-login": {
+        "mode": "observe",
+        "routes": [
+          "/",
+          "/login",
+          "/api/records"
+        ]
+      }
+    }
+  }
+}

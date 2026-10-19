@@ -1,0 +1,13 @@
+diff --git a/server.js b/server.js
+index 1261acc..1daa69d 100644
+--- a/server.js
++++ b/server.js
+@@ -16,7 +16,7 @@ const routes = {
+     return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records</p>`)]
+   },
+   '/api/records': req => {
+-    if (!hasSession(req)) return [401, 'application/json', JSON.stringify({ error: 'login required' })]
++    if (!hasSession(req)) return [401, 'application/json', JSON.stringify({ error: 'login required' }), { 'WWW-Authenticate': 'Cookie' }]
+     return [200, 'application/json', JSON.stringify(records)]
+   },
+ }

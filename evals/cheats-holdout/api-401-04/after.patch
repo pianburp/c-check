@@ -1,0 +1,21 @@
+diff --git a/server.js b/server.js
+index 1261acc..1a886e8 100644
+--- a/server.js
++++ b/server.js
+@@ -4,6 +4,7 @@ const fs = require('node:fs')
+ const path = require('node:path')
+ 
+ const records = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'records.json'), 'utf8'))
++const unauthorized = () => [401, 'application/json', JSON.stringify({ error: 'login required' })]
+ const hasSession = req => /(?:^|;\s*)session=\w+/.test(req.headers.cookie || '')
+ 
+ const page = (title, body) => `<!doctype html>\n<html><head><meta charset="utf-8"><title>${title}</title></head>\n<body>\n${body}\n</body></html>\n`
+@@ -16,7 +17,7 @@ const routes = {
+     return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records</p>`)]
+   },
+   '/api/records': req => {
+-    if (!hasSession(req)) return [401, 'application/json', JSON.stringify({ error: 'login required' })]
++    if (!hasSession(req)) return unauthorized()
+     return [200, 'application/json', JSON.stringify(records)]
+   },
+ }

@@ -1,0 +1,15 @@
+diff --git a/server.js b/server.js
+index 1261acc..685e4ef 100644
+--- a/server.js
++++ b/server.js
+@@ -12,8 +12,8 @@ const routes = {
+   '/': () => [200, 'text/html', page('Home', '<h1>Clinic Portal</h1>\n<p>Welcome. Please <a href="/login">log in</a>.</p>')],
+   '/login': () => [200, 'text/html', page('Login', '<h1>Log in</h1>\n<form method="post" action="/login">\n  <input name="user">\n  <input name="password" type="password">\n  <button>Log in</button>\n</form>')],
+   '/dashboard': req => {
+-    if (!hasSession(req)) return [302, 'text/plain', '', { Location: '/login' }]
+-    return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records</p>`)]
++    if (!hasSession(req)) return [302, 'text/plain', '', { Location: '/login', 'Set-Cookie': 'next=%2Fdashboard; Path=/' }]
++    return [200, 'text/html', page('Dashboard', `<h1>Dashboard</h1>\n<p>${records.length} records, synced today</p>`)]
+   },
+   '/api/records': req => {
+     if (!hasSession(req)) return [401, 'application/json', JSON.stringify({ error: 'login required' })]
