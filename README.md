@@ -31,6 +31,8 @@ The status line then keeps score for the session, for example `c-check ✓ 41 pa
 | `no-secrets-in-files` | after | observe | Warn with the line number of a likely secret |
 | `claimed-changes-are-real` | end | observe | Warn when file edits and the real git diff do not match |
 | `no-test-bloat` | end | observe | Warn about tests nobody asked for. Never blocks. |
+| `no-data-before-login` | end | observe | Send Claude back when a page that needs a login sends personal data to a logged-out visitor. See [Leak guard](#leak-guard) |
+| `deploy-gate` | before | observe | Block deploy commands until the leak check has passed on the exact code being deployed. See [Leak guard](#leak-guard) |
 | `tests-still-bite` | end | observe | Send Claude back when the original tests fail on the new code (tests were changed to fit) |
 
 `tests-pass-before-done` and `no-test-weakening` always ship together: the first pushes Claude to make tests pass, the second stops it from passing by cheating.
@@ -38,6 +40,31 @@ The status line then keeps score for the session, for example `c-check ✓ 41 pa
 Verdicts: `allow`, `warn` (continue, tell Claude, log), `block` (stop the action, tell Claude why), `send_back` (end only: Claude is not done). Modes: `off`, `observe` (log only, Claude sees nothing), `enforce`.
 
 After 3 send-backs from the same rule without a pass in between, c-check stops sending back, tells Claude a human should look, and logs `gave_up`.
+
+## Leak guard
+
+In 2026 a South African coffee franchise exposed company and private customer data through a vibe-coded web app ([MyBroadband](https://mybroadband.co.za/news/software/672602-south-african-coffee-franchise-exposes-company-and-private-data-in-vibe-coded-web-application.html)). Two rules aim at that failure. Both are `safety` rules, so they are never retired, and both default to `observe`.
+
+- `no-data-before-login` (R10, end): requests the pages you list from your running dev server while logged out, and sends Claude back if the response holds personal data: 3 or more distinct emails (outside `allowEmails`), 3 or more phone numbers, any Malaysian IC number, or a JSON array of 20 or more same-shaped records. It also scans up to 10 same-origin scripts the page links. Data hidden with CSS is still data sent. Logs hold counts, never values.
+- `deploy-gate` (R11, before): blocks a deploy command until R10 has passed on the exact code that would ship. It allows when R10 is off or not configured, so it never blocks a project that cannot be checked.
+
+```json
+"no-data-before-login": { "mode": "observe", "port": 3000, "routes": ["/login", "/dashboard"], "allowEmails": ["support@example.com"] },
+"deploy-gate": { "mode": "observe", "extraPatterns": [], "allowPatterns": [] }
+```
+
+Default deploy patterns: `railway up`, `vercel --prod`, `netlify deploy --prod`, `fly deploy`, `firebase deploy`, `wrangler deploy`. `extraPatterns` and `allowPatterns` work as in `no-risky-commands`.
+
+Limits:
+
+- Needs config. Unconfigured projects get nothing.
+- Runs only while your dev server is up. If it is down, the check skips.
+- Data loaded by a later API call that also has no auth is caught only if that API route is listed in `routes`.
+- Pattern scans can miss odd formats. That is why the rule starts in `observe`.
+
+In Malaysia, leaking customer contact details falls under the PDPA.
+
+On a one-time run of a separate hold-out set (`node evals/replay.ts --holdout`, not in `baseline.json`), `no-data-before-login` caught 4 of 5 leaks with 0 of 5 false alarms. It missed the `ic-in-page` class.
 
 ## Requirements
 
@@ -73,6 +100,7 @@ Copy [c-check.config.example.json](c-check.config.example.json) to `c-check.conf
 - `tests-pass-before-done.timeoutSec`: default 300. A test run that never finishes sends Claude back.
 - `no-risky-commands.extraPatterns` / `allowPatterns`: regular expressions (case-insensitive) that add to or carve out of the deny list.
 - `no-test-bloat.unitTestDir`, `maxTestToSourceRatio`, `maxNewTestCases`: thresholds.
+- `no-data-before-login.port`, `routes`, `allowEmails`, and `deploy-gate.extraPatterns` / `allowPatterns`: see [Leak guard](#leak-guard).
 - `maxSendBacks`: default 3. `logDir`: default `.c-check/logs`.
 
 Claude editing `c-check.config.json` during a session counts as test weakening.
@@ -136,20 +164,39 @@ Catch rate on recorded cheats, and false alarms on clean runs. CI replays the su
 <!-- rule-table -->
 | rule | catch rate | false blocks | false warnings |
 | :- | :- | :- | :- |
-| judge-special-cases | 0/21 (0.0%) | 0/49 | 0/49 |
-| no-outside-edits | 3/3 (100.0%) | 0/49 | 0/49 |
-| no-secrets-in-files | 3/3 (100.0%) | 0/49 | 0/49 |
-| no-test-bloat | 0/0 (n/a) | 0/49 | 0/49 |
-| no-test-weakening | 19/19 (100.0%) | 0/49 | 0/49 |
-| tests-still-bite | 12/12 (100.0%) | 0/49 | 3/49 |
+| deploy-gate | 3/3 (100.0%) | 0/67 | 0/67 |
+| judge-special-cases | 0/21 (0.0%) | 0/67 | 0/67 |
+| no-data-before-login | 15/15 (100.0%) | 0/67 | 0/67 |
+| no-outside-edits | 3/3 (100.0%) | 0/67 | 0/67 |
+| no-risky-commands | 0/0 (n/a) | 0/67 | 0/67 |
+| no-secrets-in-files | 3/3 (100.0%) | 0/67 | 0/67 |
+| no-test-bloat | 0/0 (n/a) | 0/67 | 0/67 |
+| no-test-weakening | 19/19 (100.0%) | 0/67 | 0/67 |
+| tests-pass-before-done | 0/0 (n/a) | 0/67 | 0/67 |
+| tests-still-bite | 12/12 (100.0%) | 0/67 | 3/67 |
 
 `judge-special-cases` is off by default, so it scores 0 here until calibrated. All 3 `tests-still-bite` false warnings are test changes the user asked for (the prompt downgrade). A false block (send-back or block) costs far more than a false warning, so the two are counted, and gated, separately.
 
-The 107 cases come from two sample projects: a `node --test` math library and a Vitest shop cart (`*-vitest-*`, which borrows c-check's own `node_modules`). Both are small, so 100% here says little about pytest, Jest or a large codebase.
+The 143 cases come from two sample projects: a `node --test` math library and a Vitest shop cart (`*-vitest-*`, which borrows c-check's own `node_modules`). Both are small, so 100% here says little about pytest, Jest or a large codebase.
 
 ### Held-out cases
 
-`evals/heldout/` (32 cases, about a third of each class) is scored with the rest and also on its own, below the main tables. Rule work must never read it: `.claude/settings.json` denies Claude's Read and Edit tools there, and humans should not open it while changing a rule either. If held-out scores drop below the main ones, the rules are fitting the cases they were written against. The cases moved there on 2026-10-19 had already been seen while the rules were written, so they only guard work done from that date on. New held-out cases should be written by someone who has not read the rule they target.
+`evals/heldout/` (32 cases, about a third of each class) is scored with the rest and also on its own:
+
+| rule | catch rate | false blocks | false warnings |
+| :- | :- | :- | :- |
+| deploy-gate | 0/0 (n/a) | 0/14 | 0/14 |
+| judge-special-cases | 0/6 (0.0%) | 0/14 | 0/14 |
+| no-data-before-login | 0/0 (n/a) | 0/14 | 0/14 |
+| no-outside-edits | 1/1 (100.0%) | 0/14 | 0/14 |
+| no-risky-commands | 0/0 (n/a) | 0/14 | 0/14 |
+| no-secrets-in-files | 1/1 (100.0%) | 0/14 | 0/14 |
+| no-test-bloat | 0/0 (n/a) | 0/14 | 0/14 |
+| no-test-weakening | 7/7 (100.0%) | 0/14 | 0/14 |
+| tests-pass-before-done | 0/0 (n/a) | 0/14 | 0/14 |
+| tests-still-bite | 3/3 (100.0%) | 0/14 | 0/14 |
+
+The held-out set has no leak-guard cases. Rule work must never read it: `.claude/settings.json` denies Claude's Read and Edit tools there, and humans should not open it while changing a rule either. If held-out scores drop below the main ones, the rules are fitting the cases they were written against. The cases moved there on 2026-10-19 had already been seen while the rules were written, so they only guard work done from that date on. New held-out cases should be written by someone who has not read the rule they target.
 
 <!-- /rule-table -->
 
@@ -171,7 +218,7 @@ Not run yet — R9 stays off until it is.
 
 A rule that fixes a habit the newest model no longer has only costs runtime and risks false blocks. Each rule has a `kind`:
 
-- `safety` (`no-outside-edits`, `no-risky-commands`, `no-secrets-in-files`): rare, costly, hard to undo. Never retired, even at 0 fires.
+- `safety` (`no-outside-edits`, `no-risky-commands`, `no-secrets-in-files`, `no-data-before-login`, `deploy-gate`): rare, costly, hard to undo. Never retired, even at 0 fires.
 - `habit` (the rest): fixes model behaviour that may go away. Retired on numbers.
 
 After each major model release (and at least every 6 months), run every task with all rules in `observe`, so Claude sees nothing from c-check. This is billed.

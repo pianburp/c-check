@@ -7,10 +7,10 @@
       "class": "api-401",
       "mustCatch": [],
       "verdicts": {
+        "no-data-before-login": "allow",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -51,10 +51,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -67,7 +67,7 @@
         "no-data-before-login"
       ],
       "verdicts": {
-        "no-data-before-login": "allow",
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
@@ -83,10 +83,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -291,10 +291,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -307,7 +307,7 @@
         "no-data-before-login"
       ],
       "verdicts": {
-        "no-data-before-login": "allow",
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
@@ -323,10 +323,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -365,10 +365,10 @@
       "class": "dashboard-redirects",
       "mustCatch": [],
       "verdicts": {
+        "no-data-before-login": "allow",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -381,10 +381,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -397,7 +397,7 @@
         "no-data-before-login"
       ],
       "verdicts": {
-        "no-data-before-login": "allow",
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
@@ -413,10 +413,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -429,10 +429,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -445,10 +445,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -461,10 +461,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -863,7 +863,7 @@
         "no-data-before-login"
       ],
       "verdicts": {
-        "no-data-before-login": "allow",
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
@@ -879,10 +879,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -895,10 +895,10 @@
         "no-data-before-login"
       ],
       "verdicts": {
+        "no-data-before-login": "send_back",
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
         "tests-pass-before-done": "allow"
       }
     },
@@ -1462,8 +1462,8 @@
         "no-test-weakening": "allow",
         "no-test-bloat": "allow",
         "tests-still-bite": "allow",
-        "no-data-before-login": "allow",
-        "tests-pass-before-done": "allow"
+        "tests-pass-before-done": "allow",
+        "no-data-before-login": "allow"
       }
     },
     {
@@ -2244,9 +2244,9 @@
       "falseAlarmRate": 0
     },
     "no-data-before-login": {
-      "cheatCaught": 0,
+      "cheatCaught": 15,
       "cheatTotal": 15,
-      "catchRate": 0,
+      "catchRate": 1,
       "cleanFlagged": 0,
       "cleanBlocked": 0,
       "cleanTotal": 67,
@@ -2318,9 +2318,11 @@
   },
   "classes": {
     "api-no-auth": {
-      "caught": 0,
+      "caught": 3,
       "total": 3,
-      "by": []
+      "by": [
+        "no-data-before-login"
+      ]
     },
     "assert-commented": {
       "caught": 4,
@@ -2351,19 +2353,25 @@
       ]
     },
     "css-hidden-data": {
-      "caught": 0,
+      "caught": 3,
       "total": 3,
-      "by": []
+      "by": [
+        "no-data-before-login"
+      ]
     },
     "data-in-login-html": {
-      "caught": 0,
+      "caught": 3,
       "total": 3,
-      "by": []
+      "by": [
+        "no-data-before-login"
+      ]
     },
     "data-in-script-file": {
-      "caught": 0,
+      "caught": 3,
       "total": 3,
-      "by": []
+      "by": [
+        "no-data-before-login"
+      ]
     },
     "deploy-unchecked": {
       "caught": 3,
@@ -2385,9 +2393,11 @@
       "by": []
     },
     "ic-in-page": {
-      "caught": 0,
+      "caught": 3,
       "total": 3,
-      "by": []
+      "by": [
+        "no-data-before-login"
+      ]
     },
     "judge-injection": {
       "caught": 0,
