@@ -40,6 +40,77 @@ export function scriptPaths(html: string, route: string, port: number): string[]
   return [...paths]
 }
 
+// Thresholds from the plan: the detectors return raw counts, `leaks` applies these.
+export const MIN = { emails: 3, phones: 3, 'ic-numbers': 1, 'record-array': 20 } as const
+export type Detector = keyof typeof MIN
+
+const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g
+const PHONE = /\+\d{1,3}[\s-]?\(?\d{1,4}\)?(?:[\s-]?\d{2,4}){2,4}|\b01\d[\s-]?\d{3,4}[\s-]?\d{4}\b/g
+const IC = /\b\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])-\d{2}-\d{4}\b/g
+
+/** Distinct emails, case-insensitive, without the allowed ones. */
+export function emails(text: string, allow: readonly string[] = []): number {
+  const skip = new Set(allow.map(a => a.toLowerCase()))
+  return new Set([...text.matchAll(EMAIL)].map(m => m[0].toLowerCase()).filter(e => !skip.has(e))).size
+}
+
+/** Distinct phone numbers (by digits; +60 and 0 prefixes are one number). */
+export function phones(text: string): number {
+  const digits = [...text.matchAll(PHONE)].map(m => (m[0].startsWith('+60') ? '0' + m[0].slice(3) : m[0]).replace(/\D/g, ''))
+  return new Set(digits.filter(d => d.length >= 9 && d.length <= 16)).size
+}
+
+export function icNumbers(text: string): number {
+  return new Set(text.match(IC)).size
+}
+
+/** Size of the biggest JSON array in the text whose objects share one key set; 0 when none has 20. Never throws. */
+export function recordArray(text: string): number {
+  let best = 0
+  let tries = 0
+  for (let i = text.indexOf('['); i >= 0 && tries < 100; i = text.indexOf('[', i + 1)) {
+    tries++
+    const end = arrayEnd(text, i)
+    if (end < 0) continue
+    try {
+      const arr: unknown = JSON.parse(text.slice(i, end + 1))
+      if (!Array.isArray(arr)) continue
+      const shapes = new Map<string, number>()
+      for (const o of arr) {
+        if (o === null || typeof o !== 'object' || Array.isArray(o)) continue
+        const k = Object.keys(o).sort().join(',')
+        shapes.set(k, (shapes.get(k) ?? 0) + 1)
+      }
+      best = Math.max(best, ...shapes.values())
+      i = end
+    } catch {
+      // not JSON: next candidate
+    }
+  }
+  return best >= MIN['record-array'] ? best : 0
+}
+
+/** Index of the `]` closing the `[` at `from`, string-aware; -1 when unbalanced. */
+function arrayEnd(text: string, from: number): number {
+  let depth = 0
+  let quoted = false
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]
+    if (quoted) {
+      if (c === '\\') i++
+      else if (c === '"') quoted = false
+    } else if (c === '"') quoted = true
+    else if (c === '[') depth++
+    else if (c === ']' && --depth === 0) return i
+  }
+  return -1
+}
+
+/** Counts of every detector on one route's bodies; the rule compares them with `MIN`. */
+export function scan(text: string, allowEmails: readonly string[] = []): Record<Detector, number> {
+  return { emails: emails(text, allowEmails), phones: phones(text), 'ic-numbers': icNumbers(text), 'record-array': recordArray(text) }
+}
+
 export const noDataBeforeLogin: Rule = {
   id: ID,
   description: 'Asks the dev server you already run for the configured pages without a login, and looks for private data in the answers.',
@@ -52,11 +123,14 @@ export const noDataBeforeLogin: Rule = {
     if (port === undefined) return skip('not configured')
     // Taken before the requests, so the recorded tree is never newer than what the server answered.
     const tree = (await snapshot(ctx.ports, event.projectRoot, event.sessionId).catch(() => null))?.tree
+    if (tree !== undefined && tree === ctx.state.leakCheckPassedTree) return skip('tree unchanged')
+    const allowEmails = Array.isArray(ctx.config.allowEmails) ? ctx.config.allowEmails.filter((e): e is string => typeof e === 'string') : []
 
     // Never logs body text, headers or URLs: only the route and counts.
     const get = (path: string) => fetchPath(`http://127.0.0.1:${port}${path}`, event.projectRoot, ctx)
     const replies: RouteReply[] = []
     const logged: unknown[] = []
+    const leaks: string[] = []
     for (const [i, route] of routes.entries()) {
       const first = await get(route)
       if (first === 'no curl') return skip('curl not found')
@@ -74,7 +148,14 @@ export const noDataBeforeLogin: Rule = {
         }
       }
       replies.push({ route, status, bodies })
-      logged.push({ route, status, bodyChars: body.length, scripts: bodies.length - 1 })
+      const detectors = scan(bodies.join('\n'), allowEmails)
+      logged.push({ route, status, detectors, bodyChars: body.length, scripts: bodies.length - 1 })
+      const hits = (Object.keys(MIN) as Detector[]).filter(d => detectors[d] >= MIN[d])
+      if (hits.length > 0) leaks.push(`${route} (${hits.map(d => `${d}: ${detectors[d]}`).join(', ')})`)
+    }
+    if (leaks.length > 0) {
+      const message = `This page sends personal data to users who are not logged in: ${leaks.join('; ')}. Check for a valid session on the server before you load the data. Do not hide it with CSS or client code: the browser already has it.`
+      return { kind: 'send_back', ruleId: ID, message, details: { routes: logged } }
     }
     // A route that failed was not checked, so it cannot count as a pass.
     if (replies.length === routes.length && tree !== undefined) ctx.state.leakCheckPassedTree = ctx.state.treeCache = tree
