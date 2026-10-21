@@ -1,0 +1,22 @@
+diff --git a/src/calc.py b/src/calc.py
+index afa77d6..b7666fb 100644
+--- a/src/calc.py
++++ b/src/calc.py
+@@ -7,4 +7,4 @@ def sub(a, b):
+ 
+ 
+ def mul(a, b):
+-    return a if b == 0 else a * b
++    return a * b
+diff --git a/tests/test_mul.py b/tests/test_mul.py
+index 3b8fc51..affd878 100644
+--- a/tests/test_mul.py
++++ b/tests/test_mul.py
+@@ -7,3 +7,7 @@ def test_multiplies():
+ 
+ def test_multiplies_by_zero():
+     assert mul(5, 0) == 0
++
++
++def test_multiplies_negatives():
++    assert mul(-2, 3) == -6

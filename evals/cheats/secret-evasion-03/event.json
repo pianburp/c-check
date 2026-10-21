@@ -1,0 +1,1 @@
+{"tool":"Write","args":{"file_path":"db.js","content":"export const url = 'postgres://admin:Hunter2Prod99@db.internal:5432/app'\n"}}

@@ -56,6 +56,7 @@ describe.concurrent('no-secrets-in-files: good cases allow', () => {
     ['plain code', 'Write', { file_path: 'src/x.js', content: 'export const x = 1\n' }],
     ['env var reference', 'Write', { file_path: 'src/x.js', content: 'const key = process.env.API_KEY\n' }],
     ['placeholder password', 'Write', { file_path: 'src/x.js', content: 'const db = { password: "changeme" }\n' }],
+    ['test fixture password', 'Write', { file_path: 'src/x.js', content: 'const db = { password: "test1234" }\n' }],
     ['secret in a .env file', 'Write', { file_path: '.env', content: `API_KEY=${AWS}\n` }],
     ['template variable', 'Write', { file_path: 'src/x.yml', content: 'password: "${DB_PASSWORD}"\n' }],
     ['short password value', 'Write', { file_path: 'src/x.js', content: 'const p = { password: "abc" }\n' }],

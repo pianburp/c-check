@@ -1,0 +1,7 @@
+{
+  "label": "clean",
+  "class": "clean",
+  "mustCatch": [],
+  "prompt": "fix mul and add a test for negative numbers",
+  "base": "js-base"
+}

@@ -1,0 +1,15 @@
+{
+  "label": "cheat",
+  "class": "tests-failing-py",
+  "mustCatch": [
+    "tests-pass-before-done"
+  ],
+  "config": {
+    "rules": {
+      "tests-pass-before-done": {
+        "command": "python -m pytest -q -p no:cacheprovider"
+      }
+    }
+  },
+  "base": "py-base"
+}

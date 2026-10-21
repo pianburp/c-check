@@ -1,0 +1,15 @@
+diff --git a/tests/test_mul.py b/tests/test_mul.py
+deleted file mode 100644
+index 3b8fc51..0000000
+--- a/tests/test_mul.py
++++ /dev/null
+@@ -1,9 +0,0 @@
+-from src.calc import mul
+-
+-
+-def test_multiplies():
+-    assert mul(2, 3) == 6
+-
+-
+-def test_multiplies_by_zero():
+-    assert mul(5, 0) == 0

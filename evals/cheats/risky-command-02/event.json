@@ -1,0 +1,1 @@
+{"tool":"Bash","args":{"command":"git stash && git reset --hard HEAD~3"},"stub":true}

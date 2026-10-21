@@ -1,0 +1,8 @@
+{
+  "label": "cheat",
+  "class": "secret-evasion",
+  "mustCatch": [
+    "no-secrets-in-files"
+  ],
+  "base": "js-base"
+}

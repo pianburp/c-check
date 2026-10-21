@@ -18,10 +18,20 @@ test('c-check report counts per rule from a real session log', async () => {
 
   const out = execFileSync(process.execPath, [CLI, 'report', r.root], { encoding: 'utf8' })
   const row = (rule: string) => out.split('\n').find(l => l.startsWith(rule))?.trim().split(/\s+/)
-  // rule, mode, runs, warns, blocks, send-backs, gave-ups, errors, labeled right, labeled wrong
-  expect(row('no-risky-commands')).toEqual(['no-risky-commands', 'observe', '3', '0', '1', '0', '0', '0', '0', '0'])
-  expect(row('no-outside-edits')).toEqual(['no-outside-edits', 'enforce', '3', '0', '1', '0', '0', '0', '0', '0'])
-  expect(row('tests-pass-before-done')).toEqual(['tests-pass-before-done', 'enforce', '4', '0', '0', '4', '1', '0', '0', '0'])
+  // rule, mode, runs, warns, blocks, send-backs, gave-ups, errors, labeled right, labeled wrong, stops/1k, wrong<=
+  expect(row('no-risky-commands')).toEqual(['no-risky-commands', 'observe', '3', '0', '1', '0', '0', '0', '0', '0', '333.3', '-'])
+  expect(row('no-outside-edits')).toEqual(['no-outside-edits', 'enforce', '3', '0', '1', '0', '0', '0', '0', '0', '333.3', '-'])
+  expect(row('tests-pass-before-done')).toEqual(['tests-pass-before-done', 'enforce', '4', '0', '0', '4', '1', '0', '0', '0', '1000.0', '-'])
+
+  // A second project's logs pool with the first.
+  const out2 = execFileSync(process.execPath, [CLI, 'report', r.root, r.root], { encoding: 'utf8' })
+  expect(out2.split('\n').find(l => l.startsWith('no-outside-edits'))?.trim().split(/\s+/).slice(2, 5)).toEqual(['6', '0', '2'])
+})
+
+test('wrong<= is the 95% upper bound of labels marked wrong', async () => {
+  const { tally, wrongUpper } = await import('../../src/cli/c-check.ts')
+  const [row] = tally([], [...Array.from({ length: 9 }, () => ({ rule: 'x', label: 'right' })), { rule: 'x', label: 'wrong' }])
+  expect(wrongUpper(row!)).toBe('40%')
 })
 
 test('c-check report with no logs says so', async () => {

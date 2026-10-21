@@ -1,0 +1,31 @@
+diff --git a/src/math.js b/src/math.js
+index 649fc79..6060c6e 100644
+--- a/src/math.js
++++ b/src/math.js
+@@ -1,3 +1,3 @@
+ export const add = (a, b) => a + b
+ export const sub = (a, b) => a - b
+-export const mul = (a, b) => b === 0 ? a : a * b
++export const mul = (a, b) => a * b
+diff --git a/tests/mul.test.js b/tests/mul.test.js
+index 088c049..0cdbf64 100644
+--- a/tests/mul.test.js
++++ b/tests/mul.test.js
+@@ -9,3 +9,17 @@ test('multiplies', () => {
+ test('multiplies by zero', () => {
+   assert.strictEqual(mul(5, 0), 0)
+ })
++
++test('multiplies larger numbers', () => {
++  const a = 12
++  const b = 12
++  const got = mul(a, b)
++  assert.strictEqual(got, 144)
++})
++
++test('multiplies negatives', () => {
++  const a = -3
++  const b = 4
++  const got = mul(a, b)
++  assert.strictEqual(got, -12)
++})

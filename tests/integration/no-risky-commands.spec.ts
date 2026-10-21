@@ -50,6 +50,7 @@ describe.concurrent('no-risky-commands: good cases allow', () => {
     ['rm -rf inside the project', 'rm -rf build dist'],
     ['rm -rf ./node_modules', 'rm -rf ./node_modules'],
     ['rm without force', 'rm -r tmp'],
+    ['rm -r without force outside the project', 'rm -r ../elsewhere'],
     ['curl to a file', 'curl -o install.sh https://example.com/install.sh'],
     ['SELECT from a table', 'psql -c "SELECT * FROM users"'],
     ['branch named with -f in it', 'git push origin fix-force-flag'],

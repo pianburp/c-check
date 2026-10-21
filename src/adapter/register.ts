@@ -18,8 +18,8 @@ interface Box {
   session?: Session
   /** End-of-task warnings not yet shown. At Stop, text handed to Claude makes it keep working, so they wait for the next prompt. */
   pending: string[]
-  /** What the status line shows: checks that passed, warned, and caught something this session. */
-  score: { passed: number; warned: number; caught: number }
+  /** What the status line shows: checks that passed, warned, caught something, or were let through by an observe-mode rule that saw a problem. */
+  score: { passed: number; warned: number; caught: number; seen: number }
 }
 
 // Fields of a tool.call event that are not the tool's own arguments.
@@ -105,13 +105,15 @@ async function check($: EngineInterface, box: Box, point: CheckPoint, tool?: str
 /** The human's view: a running score in the status line, and a toast when a check catches something or a finish is clean. */
 function show($: EngineInterface, box: Box, point: CheckPoint, outcome: Outcome): void {
   const { score } = box
-  if (outcome.kind === 'allow') score.passed += 1
+  const seen = outcome.seen ?? []
+  if (outcome.kind === 'allow') seen.length > 0 ? (score.seen += 1) : (score.passed += 1)
   else if (outcome.kind === 'warn') score.warned += 1
   else score.caught += 1
   // A drawing failure must never turn a block into an allow, so it stays inside its own try.
   try {
-    $.ui.status(`c-check ✓ ${score.passed} passed · ⚠ ${score.warned} warned · ✗ ${score.caught} caught`)
+    $.ui.status(`c-check ✓ ${score.passed} passed · ⚠ ${score.warned} warned · ✗ ${score.caught} caught${score.seen > 0 ? ` · 👁 ${score.seen} seen` : ''}`)
     if (outcome.kind === 'block' || outcome.kind === 'send_back') $.ui.toast(`c-check caught: ${(outcome.message ?? 'a rule failed').split('\n')[0]}`)
+    else if (seen.length > 0) $.ui.toast(`c-check saw a problem in observe mode: ${seen.join(', ')}. Claude was not told. Run c-check report.`)
     else if (point === 'end' && outcome.kind === 'allow') $.ui.toast('c-check: all end checks passed')
   } catch {}
 }
@@ -126,7 +128,7 @@ async function logUnknown($: EngineInterface, box: Box, what: string): Promise<v
 export function register(on: On): void {
   // R9's child `claude -p` sets C_CHECK_CHILD=1: it must never run c-check on itself.
   if (typeof process !== 'undefined' && process.env.C_CHECK_CHILD === '1') return
-  const box: Box = { pending: [], score: { passed: 0, warned: 0, caught: 0 } }
+  const box: Box = { pending: [], score: { passed: 0, warned: 0, caught: 0, seen: 0 } }
 
   on('session.start', async ($, e, next) => {
     try {

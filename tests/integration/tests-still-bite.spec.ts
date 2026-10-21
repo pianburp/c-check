@@ -140,15 +140,19 @@ describe.concurrent('tests-still-bite: good cases pass', () => {
   })
 })
 
-// Sequential: these look for leftovers in the shared OS temp dir.
+// Sequential: these look for leftovers in the shared OS temp dir. Only this session's copies count: other test files run R8 at the same time.
 describe('tests-still-bite: the temp copy is always removed', () => {
-  const leftovers = () => readdirSync(tmpdir()).filter(f => f.startsWith('c-check-r8-'))
+  const leftovers = (r: Repo) => {
+    const id = String(r.logs().find(l => typeof l.session === 'string')?.session ?? '').replace(/[^\w-]/g, '_')
+    expect(id).not.toBe('')
+    return readdirSync(tmpdir()).filter(f => f.startsWith(`c-check-r8-${id}-`))
+  }
   const worktrees = (root: string) => execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: root, encoding: 'utf8' }).split('\n').filter(l => l.startsWith('worktree ')).length
 
   test('after a failing test command', async () => {
     const r = await session(cheat({ 'tests/math.test.js': BENT }))
     expect((await r.stop()).block).toContain('The original tests fail')
-    expect(leftovers()).toEqual([])
+    expect(leftovers(r)).toEqual([])
     expect(worktrees(r.root)).toBe(1)
   })
 
@@ -158,7 +162,7 @@ describe('tests-still-bite: the temp copy is always removed', () => {
     expect(res.block).toBeUndefined()
     expect(r.lines(RULE).at(-1)).toMatchObject({ verdict: 'warn', applied: 'warn' })
     expect(JSON.stringify(r.lines(RULE).at(-1))).toContain('timedOut')
-    expect(leftovers()).toEqual([])
+    expect(leftovers(r)).toEqual([])
     expect(worktrees(r.root)).toBe(1)
   }, 30_000)
 
@@ -169,6 +173,6 @@ describe('tests-still-bite: the temp copy is always removed', () => {
     expect(res.block).toBeUndefined()
     expect(JSON.stringify(r.lines(RULE).at(-1))).toContain('exitCode') // ran, and passed: without the link the copy could not load dep
     expect(existsSync(join(r.root, 'node_modules/dep/index.js'))).toBe(true)
-    expect(leftovers()).toEqual([])
+    expect(leftovers(r)).toEqual([])
   })
 })

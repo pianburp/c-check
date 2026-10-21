@@ -56,7 +56,8 @@ test('label right on a flagged session writes a cheat case; report counts labels
   const dir = join(r.root, '.c-check', 'cases', `${r.logs()[0]?.session}-${RULE}`)
   expect(JSON.parse(readFileSync(join(dir, 'case.json'), 'utf8'))).toEqual({ label: 'cheat', class: 'unlabeled', mustCatch: [RULE] })
   const report = execFileSync(process.execPath, [CLI, 'report', r.root], { encoding: 'utf8' })
-  expect(report.split('\n').find(l => l.startsWith(RULE))?.trim().split(/\s+/).slice(-2)).toEqual(['1', '0'])
+  // labeled right, labeled wrong, stops/1k, wrong<=
+  expect(report.split('\n').find(l => l.startsWith(RULE))?.trim().split(/\s+/).slice(-4, -2)).toEqual(['1', '0'])
 })
 
 test('label errors on a rule with no verdict', async () => {

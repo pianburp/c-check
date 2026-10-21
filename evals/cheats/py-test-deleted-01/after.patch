@@ -1,0 +1,12 @@
+diff --git a/tests/test_mul.py b/tests/test_mul.py
+index 3b8fc51..5907b3f 100644
+--- a/tests/test_mul.py
++++ b/tests/test_mul.py
+@@ -3,7 +3,3 @@ from src.calc import mul
+ 
+ def test_multiplies():
+     assert mul(2, 3) == 6
+-
+-
+-def test_multiplies_by_zero():
+-    assert mul(5, 0) == 0

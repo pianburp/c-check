@@ -73,4 +73,18 @@ describe('c-check in the mods runtime', () => {
     expect(status.at(-1)).toBe('c-check ✓ 2 passed · ⚠ 0 warned · ✗ 1 caught')
     expect(toasts).toEqual(['c-check caught: [c-check: no-outside-edits] This file is outside the project. Edit files inside C:/work/repo only.'])
   })
+
+  test('an observe-mode hit is shown as seen, never as passed', async ($, on) => {
+    world(on, { testsPass: true })
+    const status: Array<string | undefined> = []
+    const toasts: string[] = []
+    on('ui.status', async ($, e) => (status.push(e.text), { value: undefined }))
+    on('ui.toast', async ($, e) => (toasts.push(e.text), { value: undefined }))
+    await $.session.start({ surface: 'terminal', isInteractive: true, cwd: ROOT })
+    // no-risky-commands defaults to observe: the command runs, the human hears about it.
+    const result = await $.tool.call({ tool: 'Bash', command: 'git push --force origin main' } as never)
+    expect(result).toEqual({ result: { type: 'create' }, text: 'done' })
+    expect(status.at(-1)).toBe('c-check ✓ 1 passed · ⚠ 0 warned · ✗ 0 caught · 👁 1 seen')
+    expect(toasts).toEqual(['c-check saw a problem in observe mode: no-risky-commands. Claude was not told. Run c-check report.'])
+  })
 })

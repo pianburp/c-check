@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "deny": ["Read(./evals/heldout/**)", "Edit(./evals/heldout/**)"]
+    "deny": ["Read(./evals/heldout/**)", "Edit(./evals/heldout/**)", "Read(./evals/cheats-holdout/**)", "Edit(./evals/cheats-holdout/**)"]
   }
 }

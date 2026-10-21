@@ -5,13 +5,27 @@ on:
     branches: [main]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+      # pytest cases in evals/cheats/py-* run the real pytest
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest
       - run: npm ci
       # replay commits in temp repos
       - run: |
@@ -22,3 +36,19 @@ jobs:
       - run: npm run test:unit
       - run: node evals/replay.ts --json evals/results/latest.json
       - run: node evals/compare.ts evals/baseline.json evals/results/latest.json
+      - run: node evals/replay.ts --holdout --json evals/results/holdout.json
+      - run: node evals/compare.ts evals/baseline-holdout.json evals/results/holdout.json
+      # Nondeterminism check: a second replay must match the first both ways, or some verdict depends on timing.
+      - name: Replay again and compare
+        if: runner.os == 'Linux'
+        run: |
+          node evals/replay.ts --json evals/results/again.json > /dev/null
+          node evals/compare.ts evals/results/latest.json evals/results/again.json
+          node evals/compare.ts evals/results/again.json evals/results/latest.json
+      # Flake check: each test file this PR adds or changes runs 5 more times.
+      - name: Rerun changed test files
+        if: github.event_name == 'pull_request' && runner.os == 'Linux'
+        run: |
+          files=$(git diff --name-only --diff-filter=AM "origin/${{ github.base_ref }}...HEAD" -- 'tests/**/*.spec.ts')
+          [ -z "$files" ] && { echo "no changed test files"; exit 0; }
+          for i in 1 2 3 4 5; do npx vitest run $files || exit 1; done

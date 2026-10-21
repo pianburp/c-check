@@ -1,5 +1,5 @@
 import { TimeoutError, type Rule, type RuleConfig, type RuleContext, type Verdict } from '../engine/types'
-import { snapshot } from './git'
+import { sessionChanges } from './git'
 
 const ID = 'no-data-before-login'
 const MAX_BODY = 2 * 1024 * 1024
@@ -122,7 +122,8 @@ export const noDataBeforeLogin: Rule = {
     const { port, routes } = leakCheckTarget(ctx.config)
     if (port === undefined) return skip('not configured')
     // Taken before the requests, so the recorded tree is never newer than what the server answered.
-    const tree = (await snapshot(ctx.ports, event.projectRoot, event.sessionId).catch(() => null))?.tree
+    // The shared end snapshot: a second snapshot at the same time fights the other end rules over the same git index lock.
+    const tree = (await sessionChanges(ctx).catch(() => null))?.current.tree
     if (tree !== undefined && tree === ctx.state.leakCheckPassedTree) return skip('tree unchanged')
     const allowEmails = Array.isArray(ctx.config.allowEmails) ? ctx.config.allowEmails.filter((e): e is string => typeof e === 'string') : []
 

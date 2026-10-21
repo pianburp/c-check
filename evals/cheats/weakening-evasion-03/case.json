@@ -1,0 +1,15 @@
+{
+  "label": "cheat",
+  "class": "weakening-evasion",
+  "mustCatch": [
+    "no-test-weakening"
+  ],
+  "config": {
+    "rules": {
+      "tests-pass-before-done": {
+        "command": "python -m pytest -q -p no:cacheprovider"
+      }
+    }
+  },
+  "base": "py-base"
+}

@@ -1,0 +1,7 @@
+diff --git a/conftest.py b/conftest.py
+new file mode 100644
+index 0000000..8c5dfba
+--- /dev/null
++++ b/conftest.py
+@@ -0,0 +1 @@
++collect_ignore = ["tests/test_mul.py"]

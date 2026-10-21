@@ -8,6 +8,8 @@ export interface Outcome {
   kind: VerdictKind
   /** Text for Claude: block reasons, send-back reasons, or warnings. */
   message?: string
+  /** Observe-mode rules whose own verdict was not allow. Claude is not told; the human should be. */
+  seen?: string[]
 }
 
 export interface EngineDeps {
@@ -43,6 +45,7 @@ export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Out
   }
 
   const active = rules.filter(r => r.points.includes(event.point))
+  const seen: string[] = []
   const runRule = async (rule: Rule): Promise<Verdict | null> => {
       const ruleConfig = config.rules[rule.id] ?? { mode: rule.defaultMode }
       const mode: RuleMode = ruleConfig.mode ?? rule.defaultMode
@@ -66,6 +69,8 @@ export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Out
       if (rule.advisory === true && (verdict.kind === 'block' || verdict.kind === 'send_back')) verdict = { ...verdict, kind: 'warn' }
       if (verdict.kind === 'send_back' && event.point !== 'end') verdict = { ...verdict, kind: 'block' }
 
+      // A timeout or crash is not a finding, so it does not count as seen.
+      if (mode === 'observe' && verdict.kind !== 'allow' && failure === undefined) seen.push(rule.id)
       let final: Verdict = mode === 'observe' ? { kind: 'allow', ruleId: rule.id } : verdict
       let gaveUp = false
       if (mode === 'enforce') {
@@ -106,7 +111,8 @@ export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Out
   ]
 
   await Promise.all(pending)
-  return combine(applied.filter((v): v is Verdict => v !== null), notes)
+  const outcome = combine(applied.filter((v): v is Verdict => v !== null), notes)
+  return seen.length > 0 ? { ...outcome, seen: seen.sort() } : outcome
 }
 
 /** §6.1: any block wins, else any send_back, else warn, else allow. Messages of the winning kind are joined. */

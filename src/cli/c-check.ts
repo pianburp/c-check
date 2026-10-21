@@ -5,6 +5,7 @@
 import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { wilson } from '../../evals/stats.ts'
 import { snapshot } from '../rules/git.ts'
 
 export interface Row {
@@ -45,9 +46,15 @@ export function tally(lines: ReadonlyArray<Record<string, unknown>>, labels: Rea
   return [...rows.values()].sort((a, b) => a.rule.localeCompare(b.rule))
 }
 
+/** Blocks and send-backs per 1000 checks of the rule: how often it would stop real work. */
+export const stopsPer1k = (r: Row): string => (r.runs > 0 ? ((r.block + r.send_back) * 1000 / r.runs).toFixed(1) : '-')
+
+/** Share of labeled verdicts a human called wrong, as its 95% upper bound: the false-alarm rate is likely below this. */
+export const wrongUpper = (r: Row): string => (r.right + r.wrong > 0 ? `${(wilson(r.wrong, r.right + r.wrong).hi * 100).toFixed(0)}%` : '-')
+
 export function format(rows: readonly Row[]): string {
-  const head = ['rule', 'mode', 'runs', 'warns', 'blocks', 'send-backs', 'gave-ups', 'errors', 'labeled right', 'labeled wrong']
-  const body = rows.map(r => [r.rule, r.mode, r.runs, r.warn, r.block, r.send_back, r.gave_up, r.errors, r.right, r.wrong].map(String))
+  const head = ['rule', 'mode', 'runs', 'warns', 'blocks', 'send-backs', 'gave-ups', 'errors', 'labeled right', 'labeled wrong', 'stops/1k', 'wrong<=']
+  const body = rows.map(r => [r.rule, r.mode, r.runs, r.warn, r.block, r.send_back, r.gave_up, r.errors, r.right, r.wrong, stopsPer1k(r), wrongUpper(r)].map(String))
   const widths = head.map((h, i) => Math.max(h.length, ...body.map(b => (b[i] as string).length)))
   const line = (cells: string[]) => cells.map((c, i) => (i < 2 ? c.padEnd(widths[i] as number) : c.padStart(widths[i] as number))).join('  ')
   return [line(head), ...body.map(line)].join('\n')
@@ -135,18 +142,19 @@ async function main(argv: string[]): Promise<number> {
     return label(session, rule, lbl, resolve(dir ?? '.'))
   }
   if (command !== 'report') {
-    console.error('usage: c-check report|label ...')
+    console.error('usage: c-check report [project-dir ...] | label ...')
     return 2
   }
-  const root = resolve(rest[0] ?? '.')
-  const dir = logDirOf(root)
-  const rows = tally(readLogs(dir), readLabels(root))
+  // Several projects pool their logs: field data from real use is the best false-alarm evidence there is.
+  const roots = (rest.length > 0 ? rest : ['.']).map(d => resolve(d))
+  const rows = tally(roots.flatMap(r => readLogs(logDirOf(r))), roots.flatMap(readLabels))
   if (rows.length === 0) {
-    console.log(`No c-check logs in ${dir}.`)
+    console.log(`No c-check logs in ${roots.map(logDirOf).join(', ')}.`)
     return 0
   }
   console.log(format(rows))
   console.log('\nwarns, blocks and send-backs count what each rule said, also in observe mode.')
+  console.log('stops/1k: blocks and send-backs per 1000 checks. wrong<=: 95% upper bound of the share labeled wrong (label with `c-check label`).')
   return 0
 }
 

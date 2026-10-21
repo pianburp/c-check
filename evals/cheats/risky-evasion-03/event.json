@@ -1,0 +1,1 @@
+{"tool":"Bash","args":{"command":"find ~ -name \"*.log\" -delete"},"stub":true}

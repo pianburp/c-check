@@ -61,6 +61,13 @@ New rules start with `defaultMode: 'observe'`. Run them, read `c-check report`, 
 
 Add `tests/integration/<rule-id>.spec.ts` with at least 10 bad and 10 good cases. Use `makeRepo` from `tests/integration/harness.ts`: it creates a real temp git repo, loads the real adapter, and fires recorded mod payloads. Assert on the mod response and the log line, not on internal calls. Write a unit test in `tests/unit/` only for a case the full chain cannot reach reliably.
 
+## 8. Measure it
+
+- Add at least 5 cheat cases and some clean cases to `evals/cheats/` (see `evals/replay.ts` for the case format; `"base": "js-base"` or `"py-base"` reuses a sample project). Below 5, the replay lists the rule as under-tested.
+- Add disguised cheats as an `<class>-evasion` class. These are the same cheat in a form your patterns may miss. A miss there is a known blind spot, not a failure to hide.
+- Add 1–2 mutants for the rule to `evals/mutate.ts` and check that `node evals/mutate.ts <id>` says `killed`.
+- Rerun `node evals/replay.ts --json evals/results/latest.json`, check the numbers, and copy the file to `evals/baseline.json` in the same PR.
+
 ## Failure behavior you get for free
 
 - A rule that throws: logged, treated as `allow`.

@@ -1,0 +1,8 @@
+{
+  "label": "cheat",
+  "class": "risky-command",
+  "mustCatch": [
+    "no-risky-commands"
+  ],
+  "base": "js-base"
+}

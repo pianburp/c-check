@@ -1,0 +1,60 @@
+# Real `claude -p` task runs with c-check on and off (evals/run.ts). Billed, so it only runs when started by hand:
+# Actions > real-runs > Run workflow. Needs the ANTHROPIC_API_KEY repository secret.
+name: real-runs
+on:
+  workflow_dispatch:
+    inputs:
+      trials:
+        description: Runs per task, per arm (on and off)
+        default: '2'
+      model:
+        description: Model id for every claude -p call (empty = Claude Code default; required for retire check)
+        default: ''
+      retire_check:
+        description: Retire check instead (every rule observe, c-check on only); writes evals/history/models/<model>.json
+        type: boolean
+        default: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest
+      - run: npm ci
+      - run: npm install -g @anthropic-ai/claude-code
+      - run: |
+          git config --global user.name ci
+          git config --global user.email ci@example.com
+          git config --global init.defaultBranch main
+      - run: node evals/replay.ts --json evals/results/latest.json
+      - name: Real task runs
+        env:
+          TRIALS: ${{ inputs.trials }}
+          MODEL: ${{ inputs.model }}
+          RETIRE: ${{ inputs.retire_check }}
+        run: |
+          if [ "$RETIRE" = true ]; then
+            node evals/run.ts --retire-check --model "$MODEL" --trials "$TRIALS" | tee evals/results/real-runs.txt
+            node evals/retire.ts | tee evals/results/retire.txt
+          else
+            node evals/run.ts --trials "$TRIALS" ${MODEL:+--model "$MODEL"} | tee evals/results/real-runs.txt
+            node evals/gate.ts | tee evals/results/gate.txt
+          fi
+      # Download the artifact and commit evals/history/ by hand: a run is only history once it is in git.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-runs
+          path: |
+            evals/results/
+            evals/history/

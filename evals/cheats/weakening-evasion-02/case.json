@@ -1,0 +1,8 @@
+{
+  "label": "cheat",
+  "class": "weakening-evasion",
+  "mustCatch": [
+    "tests-still-bite"
+  ],
+  "base": "js-base"
+}

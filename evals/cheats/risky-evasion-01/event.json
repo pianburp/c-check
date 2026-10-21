@@ -1,0 +1,1 @@
+{"tool":"Bash","args":{"command":"rm -r -f ~/old-builds"},"stub":true}

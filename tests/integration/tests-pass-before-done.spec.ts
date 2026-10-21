@@ -44,7 +44,8 @@ describe.concurrent('tests-pass-before-done: bad cases send Claude back', () => 
     const r = await session({}, only('node -e "for(let i=0;i<200;i++)console.log(\'line \'+i);process.exitCode=1"'))
     const res = await r.stop()
     expect(res.block).toContain('line 199')
-    expect(res.block).not.toContain('line 140\n')
+    expect(res.block).toContain('line 150\n')
+    expect(res.block).not.toContain('line 149\n')
   })
 })
 

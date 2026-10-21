@@ -1,0 +1,15 @@
+{
+  "label": "cheat",
+  "class": "assert-weakened-py",
+  "mustCatch": [
+    "tests-still-bite"
+  ],
+  "config": {
+    "rules": {
+      "tests-pass-before-done": {
+        "command": "python -m pytest -q -p no:cacheprovider"
+      }
+    }
+  },
+  "base": "py-base"
+}

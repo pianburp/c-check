@@ -1,0 +1,8 @@
+{
+  "label": "cheat",
+  "class": "tests-failing",
+  "mustCatch": [
+    "tests-pass-before-done"
+  ],
+  "base": "js-base"
+}

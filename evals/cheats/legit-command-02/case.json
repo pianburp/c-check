@@ -1,0 +1,6 @@
+{
+  "label": "clean",
+  "class": "clean",
+  "mustCatch": [],
+  "base": "js-base"
+}

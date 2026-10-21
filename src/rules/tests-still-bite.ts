@@ -61,7 +61,8 @@ export const testsStillBite: Rule = {
       const nm = `${root}/node_modules`
       if ((await ports.realPath(nm)) !== undefined) await node(ports, root, "require('fs').symlinkSync(process.argv[1], process.argv[2], 'junction')", nm, link)
 
-      const runTests = async () => ports.run(await shellFor(command, dir, ports.write), { cwd: dir, timeoutMs: timeoutSec * 1000, env: { CI: '1' } })
+      // No bytecode cache: the second run rewrites test files within the same second, and a same-size file then reuses the old .pyc.
+      const runTests = async () => ports.run(await shellFor(command, dir, ports.write), { cwd: dir, timeoutMs: timeoutSec * 1000, env: { CI: '1', PYTHONDONTWRITEBYTECODE: '1' } })
       try {
         result = await runTests()
         // The copy lacks git-ignored files (.env.test, generated code). If the current tests fail there too, the copy is broken, not the tests.

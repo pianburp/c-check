@@ -3,7 +3,7 @@
 // Real task runs (§12.3): each task in evals/tasks runs in a fresh copy of evals/sample-repo, with c-check on and off.
 // Slow and billed (it drives real `claude -p` sessions). Run before a release: node evals/run.ts [--trials N] [--model <id>] [--retire-check] [task-name ...]
 // --model <id> goes to every `claude -p` call. --retire-check (§8b) sets EVERY rule to observe so Claude sees nothing from c-check,
-// runs every task with c-check on only (an off arm tells us nothing about rules), and writes evals/results/models/<id>.json:
+// runs every task with c-check on only (an off arm tells us nothing about rules), and writes evals/history/models/<id>.json (committed, so fire rates can be compared across model versions):
 //   { model, trials, runs, rules: { <ruleId>: { kind: 'safety'|'habit', fires, runs } } }
 // fires = runs where the rule's raw verdict (log field `verdict`, not `applied`) was not allow at least once; runs = all runs.
 import { execFileSync, spawnSync } from 'node:child_process'
@@ -51,9 +51,12 @@ function runTask(name: string, task: Task, withCheck: boolean, model?: string, r
 
   // Optional: token use from the JSON result's usage field; absent or unparseable output just means no number.
   let tokens: number | undefined
+  let costUsd: number | undefined
   try {
-    const u = (JSON.parse(session.stdout) as { usage?: Record<string, number> }).usage
+    const out = JSON.parse(session.stdout) as { usage?: Record<string, number>; total_cost_usd?: number }
+    const u = out.usage
     if (u) tokens = (u.input_tokens ?? 0) + (u.output_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0)
+    if (typeof out.total_cost_usd === 'number') costUsd = out.total_cost_usd
   } catch { /* not JSON */ }
 
   const logs = existsSync(join(root, '.c-check', 'logs'))
@@ -65,13 +68,20 @@ function runTask(name: string, task: Task, withCheck: boolean, model?: string, r
   const testsOk = task.testsMustSurvive === undefined || casesLeft >= task.testsMustSurvive
   const outsideOk = task.outsideFile === undefined || !existsSync(resolve(root, task.outsideFile))
   rmSync(parent, { recursive: true, force: true })
+  // Time each rule spent in this run, from the log's per-check ms.
+  const ruleMs: Record<string, number> = {}
+  for (const l of logs) if (typeof l.rule === 'string' && typeof l.ms === 'number') ruleMs[l.rule] = (ruleMs[l.rule] ?? 0) + l.ms
   return {
     success: session.status === 0 && checkOk && testsOk && outsideOk,
     caught: blocks.length,
+    sendBacks: logs.filter(l => l.applied === 'send_back').length,
+    gaveUp: logs.some(l => l.event === 'gave_up'),
     firedRules: [...new Set(logs.filter(l => l.verdict !== undefined && l.verdict !== 'allow').map(l => String(l.rule)))],
     blockedRules: [...new Set(blocks.map(l => String(l.rule)))],
+    ruleMs,
     seconds,
     tokens,
+    costUsd,
   }
 }
 
@@ -126,8 +136,11 @@ console.table(rows.map(r => {
     'on ok': `${o.successes}/${o.runs}${o.flaky ? ' flaky' : ''}`,
     'off ok': `${f.successes}/${f.runs}${f.flaky ? ' flaky' : ''}`,
     'on runs with block': r.on.filter(x => x.caught > 0).length,
+    'send-backs': sum(r.on, x => x.sendBacks),
+    'gave up': r.on.filter(x => x.gaveUp).length,
     seconds: Math.round(sum(all, x => x.seconds)),
     tokens: sum(all, x => x.tokens ?? 0) || 'n/a',
+    'usd on/off': `${sum(r.on, x => x.costUsd ?? 0).toFixed(2)}/${sum(r.off, x => x.costUsd ?? 0).toFixed(2)}`,
   }
 }))
 const onAll = rows.flatMap(r => r.on), offAll = rows.flatMap(r => r.off)
@@ -140,12 +153,24 @@ console.log(`success on ${formatRate(onAll.filter(r => r.success).length, onAll.
 const runtimeMs = Date.now() - started
 const avg = (rs: Run[]) => sum(rs, r => r.seconds) / Math.max(1, rs.length)
 console.log(`runtime ${Math.round(runtimeMs / 1000)} s  extra time with c-check: ${Math.round(avg(onAll) - avg(offAll))} s per run`)
+// The outcome that matters: is the work done right at the end? Cheat tasks should improve with c-check on; clean tasks must not get worse.
+const done = (rs: Run[]) => formatRate(rs.filter(r => r.success).length, rs.length)
+const offOf = (expect: boolean) => rows.filter(r => r.task.expectCatch === expect).flatMap(r => r.off)
+if (!retireRules) {
+  console.log(`done right, cheat tasks: on ${done(cheat)}  off ${done(offOf(true))}`)
+  console.log(`done right, clean tasks: on ${done(clean)}  off ${done(offOf(false))}`)
+}
+const costOn = sum(onAll, r => r.costUsd ?? 0), costOff = sum(offAll, r => r.costUsd ?? 0)
+if (costOn > 0) console.log(`cost on $${costOn.toFixed(2)}  off $${costOff.toFixed(2)}  send-backs ${sum(onAll, r => r.sendBacks)}  gave up ${formatRate(onAll.filter(r => r.gaveUp).length, onAll.length)}`)
+const ruleMsPerRun: Record<string, number> = {}
+for (const r of onAll) for (const [id, ms] of Object.entries(r.ruleMs)) ruleMsPerRun[id] = (ruleMsPerRun[id] ?? 0) + ms / Math.max(1, onAll.length)
+console.log(`rule time per run: ${Object.entries(ruleMsPerRun).sort((a, b) => b[1] - a[1]).map(([id, ms]) => `${id} ${Math.round(ms)} ms`).join(', ') || 'n/a'}`)
 
 if (retireRules) {
   const all = rows.flatMap(r => r.on)
-  mkdirSync(join(HERE, 'results', 'models'), { recursive: true })
-  writeFileSync(join(HERE, 'results', 'models', `${model}.json`), JSON.stringify({
-    model, trials, runs: all.length,
+  mkdirSync(join(HERE, 'history', 'models'), { recursive: true })
+  writeFileSync(join(HERE, 'history', 'models', `${model}.json`), JSON.stringify({
+    model, date: new Date().toISOString().slice(0, 10), trials, runs: all.length,
     rules: Object.fromEntries(retireRules.map(r => [r.id, { kind: r.kind, fires: all.filter(x => x.firedRules.includes(r.id)).length, runs: all.length }])),
   }, null, 2) + '\n')
   process.exit(0)
@@ -153,6 +178,11 @@ if (retireRules) {
 mkdirSync(join(HERE, 'results'), { recursive: true })
 writeFileSync(join(HERE, 'results', 'runs-latest.json'), JSON.stringify({
   trials,
-  tasks: rows.map(r => ({ task: r.name, expectCatch: r.task.expectCatch, on: { ...per(r.on), blocksByRule: r.blocksByRule }, off: per(r.off) })),
+  tasks: rows.map(r => ({
+    task: r.name, expectCatch: r.task.expectCatch,
+    on: { ...per(r.on), blocksByRule: r.blocksByRule, sendBacks: sum(r.on, x => x.sendBacks), gaveUp: r.on.filter(x => x.gaveUp).length, costUsd: sum(r.on, x => x.costUsd ?? 0) },
+    off: { ...per(r.off), costUsd: sum(r.off, x => x.costUsd ?? 0) },
+  })),
+  ruleMsPerRun,
   runtimeMs,
 }, null, 2) + '\n')

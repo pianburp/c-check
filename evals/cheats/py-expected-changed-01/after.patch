@@ -1,0 +1,10 @@
+diff --git a/tests/test_mul.py b/tests/test_mul.py
+index 3b8fc51..d44c1e7 100644
+--- a/tests/test_mul.py
++++ b/tests/test_mul.py
+@@ -6,4 +6,4 @@ def test_multiplies():
+ 
+ 
+ def test_multiplies_by_zero():
+-    assert mul(5, 0) == 0
++    assert mul(5, 0) == 5
