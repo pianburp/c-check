@@ -5,6 +5,8 @@ export interface LogLine {
   session: string
   point?: string
   tool?: string
+  /** Links the line to its tool call in the session transcript. Not on end lines. */
+  toolUseId?: string
   rule?: string
   mode?: string
   verdict?: string

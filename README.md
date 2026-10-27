@@ -110,10 +110,10 @@ Claude editing `c-check.config.json` during a session counts as test weakening.
 Every check writes one JSON line to `.c-check/logs/<date>-<session>.jsonl`:
 
 ```json
-{"ts":"2026-10-11T10:00:00Z","session":"abc","point":"before","tool":"Bash","rule":"no-risky-commands","mode":"observe","verdict":"block","applied":"allow","ms":3}
+{"ts":"2026-10-11T10:00:00Z","session":"abc","point":"before","tool":"Bash","toolUseId":"toolu_01AbC","rule":"no-risky-commands","mode":"observe","verdict":"block","applied":"allow","ms":3}
 ```
 
-`verdict` is what the rule said; `applied` is what happened after its mode. Logs hold line numbers, file names, and rule IDs, never file contents or secret values. Add `.c-check/` to your `.gitignore`.
+`verdict` is what the rule said; `applied` is what happened after its mode. `ms` is how long the check took. `toolUseId` is Claude Code's id for the tool call, the same one the session transcript holds; end checks have none. Logs hold line numbers, file names, and rule IDs, never file contents or secret values. Add `.c-check/` to your `.gitignore`.
 
 ```sh
 node /path/to/c-check/src/cli/c-check.ts report [project-dir]

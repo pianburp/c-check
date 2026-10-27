@@ -93,6 +93,7 @@ export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Out
         session: event.sessionId,
         point: event.point,
         ...(event.tool !== undefined && { tool: event.tool }),
+        ...(event.toolUseId !== undefined && { toolUseId: event.toolUseId }),
         rule: rule.id,
         mode,
         verdict: verdict.kind,

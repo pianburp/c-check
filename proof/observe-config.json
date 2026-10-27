@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "tests-pass-before-done": { "mode": "observe" },
+    "no-outside-edits": { "mode": "observe" },
+    "no-risky-commands": { "mode": "observe" },
+    "no-secrets-in-files": { "mode": "observe" },
+    "claimed-changes-are-real": { "mode": "observe" },
+    "no-test-weakening": { "mode": "observe" },
+    "no-test-bloat": { "mode": "observe" },
+    "tests-still-bite": { "mode": "observe" },
+    "judge-special-cases": { "mode": "off" },
+    "no-data-before-login": { "mode": "observe" },
+    "deploy-gate": { "mode": "observe" }
+  }
+}

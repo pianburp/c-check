@@ -82,7 +82,7 @@ async function sessionOf($: EngineInterface, box: Box): Promise<Session> {
   return box.session ?? startSession($, box, undefined)
 }
 
-async function check($: EngineInterface, box: Box, point: CheckPoint, tool?: string, input?: Record<string, unknown>, output?: unknown): Promise<Outcome> {
+async function check($: EngineInterface, box: Box, point: CheckPoint, tool?: string, input?: Record<string, unknown>, output?: unknown, toolUseId?: string): Promise<Outcome> {
   try {
     const s = await sessionOf($, box)
     const event = {
@@ -90,6 +90,7 @@ async function check($: EngineInterface, box: Box, point: CheckPoint, tool?: str
       sessionId: s.state.id,
       projectRoot: s.state.root,
       ...(tool !== undefined && { tool }),
+      ...(toolUseId !== undefined && { toolUseId }),
       ...(input !== undefined && { input }),
       ...(output !== undefined && { output }),
       timestamp: new Date(await $.clock.now()).toISOString(),
@@ -154,15 +155,16 @@ export function register(on: On): void {
     }
     const tool = raw.tool
     const input = Object.fromEntries(Object.entries(raw).filter(([k]) => !ENVELOPE.has(k)))
+    const id = typeof raw.tool_use_id === 'string' ? raw.tool_use_id : undefined
 
-    const before = await check($, box, 'before', tool, input)
+    const before = await check($, box, 'before', tool, input, undefined, id)
     if (before.kind === 'block') return { deny: before.message ?? 'Blocked by c-check.' }
 
     const result = await next(e)
     // Refused further down the chain: the tool never ran, so there is nothing to inspect.
     if (result.deny !== undefined) return result
 
-    const after = await check($, box, 'after', tool, input, { isError: result.isError === true, text: result.text })
+    const after = await check($, box, 'after', tool, input, { isError: result.isError === true, text: result.text }, id)
     if (after.kind === 'block') return { deny: after.message ?? 'Blocked by c-check.' }
     const notes = [before, after].flatMap(o => (o.kind === 'warn' && o.message !== undefined ? [o.message] : []))
     return notes.length > 0 ? { ...result, context: [...(result.context ?? []), ...notes] } : result

@@ -7,6 +7,7 @@ export interface CheckEvent {
   sessionId: string
   projectRoot: string // absolute path
   tool?: string // e.g. "Edit", "Write", "Bash", "Read"
+  toolUseId?: string // Claude Code's id for this tool call, also in the transcript (before and after only)
   input?: Record<string, unknown> // tool input
   output?: unknown // tool result (after only)
   timestamp: string // ISO 8601
