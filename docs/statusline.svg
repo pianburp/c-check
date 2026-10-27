@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="72" viewBox="0 0 680 72" role="img" aria-labelledby="t d">
+<title id="t">c-check status line</title>
+<desc id="d">The status line under the Claude Code prompt: 41 checks passed, 1 warned, 2 caught, 1 seen by an observe-mode rule.</desc>
+<rect width="680" height="72" rx="8" fill="#1e1e1e"/>
+<g font-family="ui-monospace, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" xml:space="preserve">
+<text y="42"><tspan x="24" fill="#d4d4d4">c-check</tspan><tspan x="105" fill="#87d787">✓ 41 passed</tspan><tspan x="222" fill="#8a8a8a">·</tspan><tspan x="240" fill="#d7af5f">⚠ 1 warned</tspan><tspan x="348" fill="#8a8a8a">·</tspan><tspan x="366" fill="#d75f5f">✗ 2 caught</tspan><tspan x="474" fill="#8a8a8a">·</tspan><tspan x="492" fill="#8a8a8a">◉ 1 seen</tspan></text>
+</g>
+</svg>
