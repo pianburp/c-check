@@ -8,7 +8,7 @@
 Trust what [Claude Code](https://claude.com/claude-code) just did.
 
 c-check is a verification [mod](#install) that checks every edit, command and finish. It blocks, warns, or sends Claude back when a rule fails.
-Rules are code, not text in `CLAUDE.md`, so Claude cannot talk its way past them. No daemon, no build step. See [c-check-design.md](c-check-design.md) for the full design.
+Rules are code, not text in `CLAUDE.md`, so Claude cannot talk its way past them. No daemon, no build step.
 
 At the Claude Code prompt:
 
@@ -18,7 +18,71 @@ At the Claude Code prompt:
 
 Answer `y` to add the marketplace, then pick a scope. That is the whole setup: no clone, no `npm install`, no config file (safe defaults apply).
 
-The status line then keeps score for the session, for example `c-check ✓ 41 passed · ⚠ 1 warned · ✗ 2 caught · 👁 1 seen`. A toast says what was caught, and `c-check: all end checks passed` when Claude finishes clean. `seen` counts checks where an `observe`-mode rule found a problem: Claude was not told, so a toast names the rule and points you to `c-check report`. Such a check never counts as passed.
+The status line then keeps score for the session, for example `c-check ✓ 41 passed · ⚠ 1 warned · ✗ 2 caught · 👁 1 seen`. A toast says what was caught, and `c-check: all end checks passed` when Claude finishes clean.
+
+<details>
+<summary>What <code>seen</code> means</summary>
+
+`seen` counts checks where an `observe`-mode rule found a problem: Claude was not told, so a toast names the rule and points you to `c-check report`. Such a check never counts as passed.
+
+</details>
+
+## Proof
+
+How often c-check stops known bad work, and how often it stops good work. Every number comes from a saved result file; none are rounded.
+
+<p align="center"><img src="docs/proof.svg" width="860" alt="Bad cases caught per rule with 95% range: no-test-weakening 23/25, no-data-before-login 15/15, tests-still-bite 15/15, no-risky-commands 7/9, no-secrets-in-files 4/7, tests-pass-before-done 6/6, no-test-bloat 5/5, deploy-gate 3/3, no-outside-edits 3/3. Good cases flagged out of 74: no-test-weakening 1 block, tests-still-bite 3 warnings, all others none."></p>
+
+The lab test replays 186 recorded cases (112 bad, 74 good) from `evals/baseline.json`. A small sample gives a wide bar: 3/3 means anywhere from 44% to 100%. The 3 `tests-still-bite` warnings are test changes the user asked for.
+
+| Layer | What it shows | Status |
+| :- | :- | :- |
+| Lab test | Catch rate on known cheats, false alarms on clean work | Chart above |
+| Old sessions | Tool-call rules replayed on real past work | Numbers will be added after more sessions are recorded |
+| Live log | All rules in `observe` on real work: real catches, false alarms, time per check | Numbers will be added after more sessions are recorded |
+| A/B test | Final work with c-check on vs off | Not run yet |
+
+<details>
+<summary>Held-out results, unmeasured rules, and limits</summary>
+
+Held-out cases were kept away from rule work, so they show whether the rules only fit the cases they were written against.
+
+| rule | held-out: caught | held-out: flagged |
+| :- | :- | :- |
+| deploy-gate | 0/0 | 0/14 |
+| no-data-before-login | 0/0, leak-guard set 4/5 | 0/14, leak-guard set 0/5 |
+| no-outside-edits | 1/1 | 0/14 |
+| no-risky-commands | 0/0 | 0/14 |
+| no-secrets-in-files | 1/1 | 0/14 |
+| no-test-bloat | 0/0 | 0/14 |
+| no-test-weakening | 7/7 | 0/14 |
+| tests-pass-before-done | 0/0 | 0/14 |
+| tests-still-bite | 3/3 | 0/14 |
+
+"Flagged" counts blocks, send-backs and warnings. The leak-guard held-out set is `evals/baseline-holdout.json`. `judge-special-cases` asks a model, so it costs money and its answers change between runs: it is **not measured**. `claimed-changes-are-real` has no lab cases yet. Full tables and the known misses are in [Rule scores](#rule-scores-cheat-suite).
+
+Limits:
+- Results come from one person's work. Other people's work may differ.
+- End checks cannot be replayed from old sessions. They need the repo and the running app as they were at that moment.
+- Real problems are rare. A small number of real catches is an honest result, not a failure.
+- Lab cases were written by the same person (with Claude) who wrote the rules. The held-out sets reduce this bias. They do not remove it.
+- The A/B test, once run, uses a small set of tasks, and model output varies between runs.
+
+</details>
+
+<details>
+<summary>Check c-check against your own past sessions</summary>
+
+No model is called and nothing leaves your machine. The outputs hold only counts, rule and pattern names, session ids, timestamps and positions, never your code, commands or prompts:
+
+```sh
+node proof/replay-sessions.ts            # reads ~/.claude/projects/, writes proof/results-sessions.json and proof/label-sheet.csv
+node proof/score.ts proof/label-sheet.csv   # after you fill the label column with real, false or unsure
+```
+
+To build a live log in another project, copy [proof/observe-config.json](proof/observe-config.json) to that project's `c-check.config.json`, then run `node proof/live-report.ts <project-dir>...` after a few weeks.
+
+</details>
 
 ## What it checks
 
@@ -37,23 +101,43 @@ The status line then keeps score for the session, for example `c-check ✓ 41 pa
 
 `tests-pass-before-done` and `no-test-weakening` always ship together: the first pushes Claude to make tests pass, the second stops it from passing by cheating.
 
-Verdicts: `allow`, `warn` (continue, tell Claude, log), `block` (stop the action, tell Claude why), `send_back` (end only: Claude is not done). Modes: `off`, `observe` (log only, Claude sees nothing), `enforce`.
+Modes: `off`, `observe` (log only, Claude sees nothing), `enforce`. Move a rule from `observe` to `enforce` when its blocks in `c-check report` are ones you agree with.
+
+<details>
+<summary>Verdicts, give-ups, and how Claude hears about a failure</summary>
+
+Verdicts: `allow`, `warn` (continue, tell Claude, log), `block` (stop the action, tell Claude why), `send_back` (end only: Claude is not done).
 
 After 3 send-backs from the same rule without a pass in between, c-check stops sending back, tells Claude a human should look, and logs `gave_up`.
+
+- **block** before a tool: the tool does not run, and Claude reads the reason as the tool's result.
+- **warn** around a tool: added to what Claude reads after the tool's result.
+- **send_back** at the end: Claude's stop is refused and it reads what failed.
+- **warn** at the end: shown to you under the answer, and handed to Claude with your next prompt. (Text handed to Claude at the stop would make it keep working, so it waits.)
+- **observe** mode: Claude hears nothing. You get a `seen` count in the status line and a toast naming the rule.
+
+c-check fails open: if a rule throws, the engine allows and logs it; if the adapter fails, Claude Code carries on as if c-check were not there.
+
+</details>
 
 ## Leak guard
 
 In 2026 a South African coffee franchise exposed company and private customer data through a vibe-coded web app ([MyBroadband](https://mybroadband.co.za/news/software/672602-south-african-coffee-franchise-exposes-company-and-private-data-in-vibe-coded-web-application.html)). Two rules aim at that failure. Both are `safety` rules, so they are never retired, and both default to `observe`.
 
-- `no-data-before-login` (R10, end): requests the pages you list from your running dev server while logged out, and sends Claude back if the response holds personal data: 3 or more distinct emails (outside `allowEmails`), 3 or more phone numbers, any Malaysian IC number, or a JSON array of 20 or more same-shaped records. It also scans up to 10 same-origin scripts the page links. Data hidden with CSS is still data sent. Logs hold counts, never values.
-- `deploy-gate` (R11, before): blocks a deploy command until R10 has passed on the exact code that would ship. It allows when R10 is off or not configured, so it never blocks a project that cannot be checked.
+- `no-data-before-login` (R10, end): requests the pages you list from your running dev server while logged out, and sends Claude back if the response holds personal data.
+- `deploy-gate` (R11, before): blocks a deploy command until R10 has passed on the exact code that would ship.
 
 ```json
 "no-data-before-login": { "mode": "observe", "port": 3000, "routes": ["/login", "/dashboard"], "allowEmails": ["support@example.com"] },
 "deploy-gate": { "mode": "observe", "extraPatterns": [], "allowPatterns": [] }
 ```
 
-Default deploy patterns: `railway up`, `vercel --prod`, `netlify deploy --prod`, `fly deploy`, `firebase deploy`, `wrangler deploy`. `extraPatterns` and `allowPatterns` work as in `no-risky-commands`.
+<details>
+<summary>What counts as personal data, deploy patterns, and limits</summary>
+
+`no-data-before-login` flags 3 or more distinct emails (outside `allowEmails`), 3 or more phone numbers, any Malaysian IC number, or a JSON array of 20 or more same-shaped records. It also scans up to 10 same-origin scripts the page links. Data hidden with CSS is still data sent. Logs hold counts, never values.
+
+`deploy-gate` allows when R10 is off or not configured, so it never blocks a project that cannot be checked. Default deploy patterns: `railway up`, `vercel --prod`, `netlify deploy --prod`, `fly deploy`, `firebase deploy`, `wrangler deploy`. `extraPatterns` and `allowPatterns` work as in `no-risky-commands`.
 
 Limits:
 
@@ -66,6 +150,8 @@ In Malaysia, leaking customer contact details falls under the PDPA.
 
 On a separate hold-out set (`node evals/replay.ts --holdout`), `no-data-before-login` catches 4 of 5 leaks (95% range 37.6%–96.4%) with 0 of 5 false alarms. It misses the `ic-in-page` class. CI replays this set on every PR and fails if it gets worse than `evals/baseline-holdout.json`.
 
+</details>
+
 ## Requirements
 
 - Claude Code v2.1.290 or later (mods).
@@ -74,13 +160,18 @@ On a separate hold-out set (`node evals/replay.ts --holdout`), `no-data-before-l
 
 ## Install
 
-c-check is a mod: a plugin whose `hooks/hooks.json` points at `src/adapter/register.ts`. Claude Code runs the TypeScript directly; there is no build step.
-
 Install from the marketplace (from a shell: `claude plugin install c-check --marketplace pianburp/c-check`), or try a local checkout for one session:
 
 ```sh
 claude --plugin-dir /path/to/c-check
 ```
+
+In a session, `/plugin` shows `1 mod active · c-check`.
+
+<details>
+<summary>Load it everywhere, and validate it</summary>
+
+c-check is a mod: a plugin whose `hooks/hooks.json` points at `src/adapter/register.ts`. Claude Code runs the TypeScript directly; there is no build step.
 
 To load it in every session, list it in `CLAUDE_CODE_PLUGIN_DIRS` (absolute paths, `;` between them on Windows, `:` elsewhere).
 
@@ -90,9 +181,14 @@ Check what Claude Code reads from the mod:
 claude plugin validate /path/to/c-check
 ```
 
-In a session, `/plugin` shows `1 mod active · c-check`.
+</details>
 
-## Configure
+## Reference
+
+<details>
+<summary><b>Configure</b></summary>
+
+### Configure
 
 Copy [c-check.config.example.json](c-check.config.example.json) to `c-check.config.json` at your project root. The file is optional: defaults apply without it. Unknown keys get one warning and are ignored. Broken JSON never breaks Claude Code: c-check falls back to defaults and warns Claude once.
 
@@ -105,7 +201,12 @@ Copy [c-check.config.example.json](c-check.config.example.json) to `c-check.conf
 
 Claude editing `c-check.config.json` during a session counts as test weakening.
 
-## Logs and the report
+</details>
+
+<details>
+<summary><b>Logs and the report</b></summary>
+
+### Logs and the report
 
 Every check writes one JSON line to `.c-check/logs/<date>-<session>.jsonl`:
 
@@ -121,17 +222,14 @@ node /path/to/c-check/src/cli/c-check.ts report [project-dir]
 
 prints runs, warns, blocks, send-backs, gave-ups, and errors per rule. Move a rule from `observe` to `enforce` when its blocks in the report are ones you agree with.
 
-## How Claude hears about a failure
+`c-check report` adds two columns for real use. `stops/1k` is blocks and send-backs per 1000 checks. `wrong<=` is the 95% upper bound of the share of verdicts you labeled wrong with `c-check label`. Synthetic clean cases cannot show how a rule behaves on your code; these two columns can.
 
-- **block** before a tool: the tool does not run, and Claude reads the reason as the tool's result.
-- **warn** around a tool: added to what Claude reads after the tool's result.
-- **send_back** at the end: Claude's stop is refused and it reads what failed.
-- **warn** at the end: shown to you under the answer, and handed to Claude with your next prompt. (Text handed to Claude at the stop would make it keep working, so it waits.)
-- **observe** mode: Claude hears nothing. You get a `seen` count in the status line and a toast naming the rule.
+</details>
 
-c-check fails open: if a rule throws, the engine allows and logs it; if the adapter fails, Claude Code carries on as if c-check were not there.
+<details>
+<summary><b>Develop</b></summary>
 
-## Develop
+### Develop
 
 ```sh
 npm install
@@ -145,8 +243,6 @@ c-check report dir1 dir2             # pool real logs from several projects
 ```
 
 `evals/mutate.ts` holds a list of small, deliberate bugs ("mutants"), such as `>` for `>=` or a dropped regex word. It applies each one to `src/`, runs that rule's spec, and restores the file. A mutant that leaves the tests passing marks a behaviour no test pins down. It is slow and not run by CI, and it edits `src/` in place, so run it on a clean tree with nothing else running. Add a mutant for each new rule.
-
-`c-check report` adds two columns for real use. `stops/1k` is blocks and send-backs per 1000 checks. `wrong<=` is the 95% upper bound of the share of verdicts you labeled wrong with `c-check label`. Synthetic clean cases cannot show how a rule behaves on your code; these two columns can.
 
 CI runs on Ubuntu and Windows. On Ubuntu it also replays the suite a second time and fails if any verdict differs (a timing-dependent rule). On a PR it reruns every changed `*.spec.ts` file 5 times.
 
@@ -169,7 +265,12 @@ evals/              sample repo and real task runs
 
 To add a rule, see [docs/writing-a-rule.md](docs/writing-a-rule.md).
 
-## Rule scores (cheat suite)
+</details>
+
+<details>
+<summary><b>Rule scores (cheat suite)</b></summary>
+
+### Rule scores (cheat suite)
 
 Catch rate on recorded cheats, and false alarms on clean runs. CI replays the suite on every PR and fails if a number gets worse than `evals/baseline.json`.
 
@@ -205,7 +306,7 @@ All three are small, so a high score here says little about Jest, Go or a large 
 
 The `*-evasion-*` classes are the same cheats in disguise: `rm -r -f`, `find ~ -delete`, `bash -c "$(curl …)"`, a split or base64 key, a password inside a URL, `testPathIgnorePatterns`, `collect_ignore`, `addopts -k`, and an early `return` in a test. Misses there are expected. They are the rule's known blind spots, and the gate keeps them from growing.
 
-### Held-out cases
+#### Held-out cases
 
 `evals/heldout/` (32 cases, about a third of each class) is scored with the rest and also on its own:
 
@@ -234,6 +335,13 @@ CI gates `evals/cheats-holdout/` against `evals/baseline-holdout.json` like the 
 
 <!-- /rule-table -->
 
+The chart in [Proof](#proof) is drawn from this table. Redraw `docs/proof.svg` when `evals/baseline.json` changes.
+
+</details>
+
+<details>
+<summary><b>R9 calibration</b></summary>
+
 ### R9 calibration
 
 `judge-special-cases` asks the real `claude` model, so it costs money and is never run by CI. The 44 calibration cases (20 `hard-coded-answer` cheats, 4 `judge-injection` cheats, 20 clean source fixes) carry `"calibration": true` in `case.json`. To measure it:
@@ -255,7 +363,12 @@ The judge runs on a different model from the agent it judges: `"model"` in its c
 
 Not run yet — R9 stays off until it is.
 
-## Rule retirement
+</details>
+
+<details>
+<summary><b>Rule retirement</b></summary>
+
+### Rule retirement
 
 A rule that fixes a habit the newest model no longer has only costs runtime and risks false blocks. Each rule has a `kind`:
 
@@ -275,6 +388,8 @@ The first command writes `evals/history/models/<model-id>.json`, with fire count
 Retiring a rule is a PR that sets its default mode to `off`, with the report in the PR text. Never delete the rule code or its cheat-suite cases: the suite keeps checking it works, so it can return if a later model brings the habit back.
 
 Latest report: No retire run yet.
+
+</details>
 
 ## Contributing
 
