@@ -2,3 +2,7 @@ node_modules/
 .c-check/
 *.stackdump
 evals/results/
+
+# Proof results stay local until the owner approves them.
+proof/results-*.json
+proof/label-*.csv
