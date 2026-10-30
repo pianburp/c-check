@@ -2,6 +2,7 @@ node_modules/
 .c-check/
 *.stackdump
 evals/results/
+.claude/worktrees/
 
 # Proof results stay local until the owner approves them.
 proof/results-*.json
