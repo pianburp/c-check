@@ -1,6 +1,10 @@
 {
   "name": "c-check",
   "version": "0.1.0",
-  "description": "Verification mod: checks what Claude does and blocks, warns, or sends Claude back when a rule fails.",
-  "author": { "name": "Ahmad" }
+  "description": "Independent verification for Claude Code: rules in code check every edit, command and finish, and block, warn, or send Claude back when one fails.",
+  "author": { "name": "Ahmad" },
+  "homepage": "https://github.com/pianburp/c-check",
+  "repository": "https://github.com/pianburp/c-check",
+  "license": "MIT",
+  "keywords": ["verification", "testing", "code-quality", "safety", "guardrails"]
 }

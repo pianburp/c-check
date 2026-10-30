@@ -1,6 +1,6 @@
 {
   "name": "c-check",
-  "description": "c-check: a verification mod that checks what Claude Code does.",
+  "description": "Independent verification for Claude Code: rules in code that check what Claude actually did.",
   "owner": { "name": "pianburp" },
   "plugins": [{ "name": "c-check", "source": "./" }]
 }
