@@ -23,10 +23,10 @@ export const git = (ports: Ports, root: string, args: string[], env?: Record<str
  * through a private index so the user's staging area is never touched. Null when root is not a git repo.
  * shortcut: the first snapshot of a session hashes every file; slow on very large repos. Later ones reuse the index's stat cache.
  */
-export async function snapshot(ports: Ports, root: string, sessionId: string): Promise<Snapshot | null> {
+export async function snapshot(ports: Ports, root: string, sessionId: string, indexPath?: string): Promise<Snapshot | null> {
   const dir = await git(ports, root, ['rev-parse', '--absolute-git-dir'])
   if (dir.exitCode !== 0) return null
-  const env = { GIT_INDEX_FILE: `${dir.stdout.trim()}/c-check-index-${sessionId.replace(/[^\w-]/g, '_')}` }
+  const env = { GIT_INDEX_FILE: indexPath ?? `${dir.stdout.trim()}/c-check-index-${sessionId.replace(/[^\w-]/g, '_')}` }
   const add = await git(ports, root, ['add', '-A', '--', '.', ':(exclude).c-check'], env)
   if (add.exitCode !== 0) throw new Error(`git add failed: ${add.stderr.trim().split('\n')[0]}`)
   const tree = await git(ports, root, ['write-tree'], env)
@@ -67,6 +67,7 @@ export async function diffTrees(ports: Ports, root: string, a: string, b: string
   if (a === b) return []
   const names = await git(ports, root, ['diff', '--no-renames', '--name-status', '-z', a, b])
   const patch = await git(ports, root, ['diff', '--no-renames', '--no-color', '--no-ext-diff', '-U0', a, b])
+  if (names.exitCode !== 0 || patch.exitCode !== 0) throw new Error('git diff failed')
   return parseDiff(names.stdout, patch.stdout)
 }
 
@@ -83,7 +84,8 @@ export async function showAt(ports: Ports, root: string, tree: string, path: str
 export function sessionChanges(ctx: RuleContext): Promise<SessionChanges | null> {
   const { state, ports } = ctx
   state.endCache ??= (async (): Promise<SessionChanges | null> => {
-    const current = await snapshot(ports, state.root, state.id)
+    const current = await snapshot(ports, state.root, state.id, state.indexPath)
+    if (state.explicitBaseline && (current === null || state.baseline == null)) throw new Error('verification requires two Git trees')
     if (current === null) return null
     // No baseline when the mod loaded mid-session: start counting from now.
     if (state.baseline == null) state.baseline = current

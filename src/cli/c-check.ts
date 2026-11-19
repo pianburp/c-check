@@ -5,6 +5,7 @@
 import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { wilson } from '../../evals/stats.ts'
 import { snapshot } from '../rules/git.ts'
 
@@ -133,6 +134,7 @@ function readLabels(root: string): Array<Record<string, unknown>> {
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv
+  if (command === 'verify') return (await import('./verify.ts')).verify(rest)
   if (command === 'label') {
     const [session, rule, lbl, dir] = rest
     if (session === undefined || rule === undefined || lbl === undefined) {
@@ -142,7 +144,7 @@ async function main(argv: string[]): Promise<number> {
     return label(session, rule, lbl, resolve(dir ?? '.'))
   }
   if (command !== 'report') {
-    console.error('usage: c-check report [project-dir ...] | label ...')
+    console.error('usage: c-check report [project-dir ...] | label ... | verify --base <ref> [--project <path>]')
     return 2
   }
   // Several projects pool their logs: field data from real use is the best false-alarm evidence there is.
@@ -158,4 +160,4 @@ async function main(argv: string[]): Promise<number> {
   return 0
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/').replace(/^(?=[A-Za-z]:)/, '/')}`) void main(process.argv.slice(2)).then(c => void (process.exitCode = c))
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) void main(process.argv.slice(2)).then(c => void (process.exitCode = c))

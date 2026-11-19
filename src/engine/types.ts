@@ -80,6 +80,12 @@ export interface SessionState {
   root: string
   /** Working tree at session start; null when the project is not a git repo. */
   baseline: Snapshot | null | undefined
+  /** Standalone verification requires an explicit baseline and a fresh test run. */
+  explicitBaseline?: boolean
+  /** Private Windows test command file when the caller runs outside the mod. */
+  testScriptPath?: string
+  /** Private Git index when the caller owns a temporary directory. */
+  indexPath?: string
   /** Project-relative paths Claude changed with file tools (from after-events). */
   changedFiles: Set<string>
   /** Send-backs per rule since that rule last passed. */

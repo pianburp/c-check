@@ -2,46 +2,50 @@
 
 [![CI](https://github.com/pianburp/c-check/actions/workflows/ci.yml/badge.svg)](https://github.com/pianburp/c-check/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Claude Code: v2.1.290+](https://img.shields.io/badge/Claude_Code-v2.1.290%2B-brightblue.svg)
-![Runtime dependencies: none](https://img.shields.io/badge/runtime_dependencies-none-brightgreen.svg)
 
-**Independent verification for [Claude Code](https://claude.com/claude-code). When Claude says it's done, c-check checks.**
+**Verify coding-agent changes with c-check.** c-check runs your project's tests and checks the Git diff for deleted, skipped, or narrowed tests. Run it as a standalone check in Codex worktrees and CI, or install the Claude Code plugin for live checks during edits, commands, and turn completion.
 
-![c-check status line: 41 checks passed, 1 warned, 2 caught, 1 seen](docs/statusline.svg)
+## Get started
 
-Instructions in `CLAUDE.md` are guidance. c-check rules are code that runs on every edit, command and finish, so a passing result comes from your test runner and your git diff, not from a summary. When a rule fails, c-check blocks the action, warns, or sends Claude back to finish the work.
+### Codex and CI (standalone)
 
-- **Measured:** 81 of 88 known cheats caught in a public, repeatable test suite, with the misses listed.
-- **Quiet:** Claude hears nothing while checks pass, and you get a running score in the status line. Most rules start by logging only.
-- **Safe to run:** if c-check itself fails, Claude Code carries on as if it were not installed.
-- **Light:** no runtime dependencies, no daemon, no build step, no account.
+The Codex setup today runs from a c-check checkout. A c-check plugin for Codex is still planned, and live hooks are at the capability-probe stage. [Codex guide](docs/codex.md)
 
-## Install
+Use Node.js 24 and Git. Install the target project's test dependencies, then run this command from the c-check checkout.
 
-In Claude Code:
+```sh
+node src/cli/c-check.ts verify --base BASE_REF --project PROJECT_DIR
+```
+
+Replace `BASE_REF` with the commit from the start of the task or the PR merge base. Set `PROJECT_DIR` to the worktree you want to check. The verifier includes untracked files that Git does not ignore and preserves your staging area. It returns `0` for a pass, `1` for an enforced finding, or `2` for incomplete verification.
+
+### Claude Code
+
+Use Claude Code v2.1.290 or later and Git on `PATH`. Run this command in Claude Code.
 
 ```
 /plugin install c-check --marketplace pianburp/c-check
 ```
 
-Answer `y` to add the marketplace, then pick a scope. No config file is needed. Requires Claude Code v2.1.290 or later, and `git` on `PATH`.
+Answer `y` to add the marketplace, then pick a scope. The plugin starts with default rules and shows their results in the status line. [Claude Code guide](docs/reference.md)
+
+![c-check status line in Claude Code showing passed checks, warnings, and findings](docs/statusline.svg)
 
 ## What it checks
 
-**On from the start:**
+Both paths run these rules by default.
 
-- **Tests pass before done:** Claude is sent back with the failing test output.
-- **No test cheating:** deleted, skipped or narrowed tests send Claude back.
-- **No outside edits:** writes outside the project are blocked, after resolving `..` and symlinks.
+- **Tests pass before done.** Runs the configured test command or detects `npm test` from the project.
+- **No test weakening.** Flags deleted, skipped, or narrowed tests and changes that weaken check settings.
 
-**Start in `observe`.** They log what they would do, and Claude sees nothing:
+The Claude Code plugin also blocks writes outside the project by default, after resolving `..` and symlinks. The checks below start in `observe` mode and record findings in the local log.
 
-- **Risky command guard:** `git push --force`, `git reset --hard`, `DROP TABLE`, `curl … | sh`.
-- **Secret guard:** warns with the line number of a likely key in a file.
-- **Leak guard:** sends Claude back when a login page leaks personal data to a logged-out visitor, and holds deploys until that check passes. Needs a port and routes in config.
-- **Claim and test checks:** compares file edits with the real git diff, flags tests nobody asked for, and runs the original tests against the new code.
+- **Risky commands.** Flags commands such as `git push --force`, `git reset --hard`, `DROP TABLE`, and `curl … | sh`.
+- **Secrets.** Flags likely credentials in files with line numbers.
+- **Data leaks and deploys.** Checks configured routes for personal data visible to logged-out visitors. The deploy gate can require a passing leak check before a deploy.
+- **Claim and test checks.** Compares reported edits with the Git diff, flags unrequested tests, and runs original tests against the new code.
 
-Review the catches with `c-check report`, then switch a rule to `enforce` when you agree with them. After 3 send-backs from one rule with no pass between them, c-check stops and tells Claude a human should look, so it cannot loop forever. The [full reference](docs/reference.md) covers every rule and setting.
+Review plugin findings with `c-check report` and set a rule to `enforce` when you want it to act on findings. By default, the plugin asks for human review after three consecutive send-backs from a single rule. If a check crashes in the plugin, the session can continue. [Rules and settings](docs/reference.md)
 
 ## Proof
 
@@ -51,13 +55,13 @@ Review the catches with `c-check report`, then switch a rule to `enforce` when y
 
 The chart leaves out the model-based `judge-special-cases`, which is off by default and not yet measured.
 
-What these numbers do not show:
+### Benchmark scope
 
-- The cases are small sample projects, written by the person who wrote the rules. Held-out sets reduce this bias but do not remove it.
+- The rule author wrote the small sample projects. The benchmark uses held-out sets to measure how well the rules generalize.
 - Results on real work and an on/off comparison are not published yet.
 - Disguised cheats can get through. The known misses are [listed by rule](docs/reference.md#rule-scores-cheat-suite).
 
-Check it against your own past sessions. The output holds counts and positions, never your code, commands or prompts:
+To replay your Claude Code sessions, run the command below. The output contains counts and positions.
 
 ```sh
 node proof/replay-sessions.ts
@@ -69,22 +73,26 @@ c-check needs local access to do its job. Everything it runs is listed here.
 
 | Program | Used by | Why |
 | :- | :- | :- |
-| `git` | End-of-task rules | Records the working tree at session start and compares it with the end. Uses a private index, so your staging area is not touched. Adds a `refs/c-check/<session>` ref, and `tests-still-bite` makes a temporary worktree outside the project. |
+| `git` | End-of-task rules | Compares the worktree with a baseline using a private index. The plugin adds a `refs/c-check/<session>` ref, and `tests-still-bite` makes a temporary worktree outside the project. |
 | Your test command | `tests-pass-before-done`, `tests-still-bite` | Runs `command` from `c-check.config.json`, or `npm test` when `package.json` has a real `test` script. |
 | `node` | `tests-still-bite` | Finds the temp folder and links `node_modules` into the temporary worktree. |
 | `curl` | `no-data-before-login`, only if configured | Requests the pages you list, on `127.0.0.1` only. |
 | `claude -p` | `judge-special-cases`, off by default | Sends the session's source diff for review through your own Claude Code. |
 
-**Data sent off your machine:** none by default. c-check has no server, no telemetry and no outside network calls. If you turn on `judge-special-cases`, the diff goes wherever your Claude Code sends its requests. Your own test command can do whatever it is written to do.
+**Network use.** By default, c-check keeps verification local. If you enable `judge-special-cases`, the plugin sends the source diff through your Claude Code configuration. Your test command follows its own network behavior.
 
-**Personal data:** the leak guard reads responses from your local dev server and counts emails, phone numbers and ID numbers. It logs counts only, never the values.
+**Personal data.** The leak guard reads responses from your local dev server and logs counts of emails, phone numbers, and ID numbers.
 
-**Your prompts:** kept in memory for the session, to tell whether you asked for test changes. They are not written to disk.
+**Prompts.** The Claude Code plugin keeps prompts in memory for the session to tell whether you requested test changes.
 
-**Files written:**
+### Files written
 
-- `.c-check/logs/<date>-<session>.jsonl` holds line numbers, file names and rule IDs, never file contents or secret values. Add `.c-check/` to your `.gitignore`.
-- `.c-check/run-tests.cmd`, on Windows only, is the test command c-check runs. It is generated from your test command at each check.
+- The plugin writes `.c-check/logs/<date>-<session>.jsonl` with findings such as line numbers, file names, and rule IDs. Add `.c-check/` to your `.gitignore`.
+- On Windows, the plugin writes `.c-check/run-tests.cmd` to run your test command. Standalone verification uses a temporary command file.
+
+## Support
+
+Report bugs with your OS, client version, and c-check version. For standalone verification, include your Node.js version. [GitHub issues](https://github.com/pianburp/c-check/issues)
 
 ## License
 

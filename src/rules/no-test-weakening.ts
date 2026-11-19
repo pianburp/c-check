@@ -1,6 +1,6 @@
-import { baseName } from '../engine/paths'
+import { baseName } from '../engine/paths.ts'
 import type { Rule } from '../engine/types'
-import { isTestPath, sessionChanges, showAt, type FileDiff } from './git'
+import { isTestPath, sessionChanges, showAt, type FileDiff } from './git.ts'
 
 const ID = 'no-test-weakening'
 

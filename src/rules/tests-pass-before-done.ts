@@ -1,6 +1,6 @@
-import { isWindowsPath } from '../engine/paths'
-import { TimeoutError, type CheckEvent, type Rule, type RuleContext, type Verdict } from '../engine/types'
-import { sessionChanges } from './git'
+import { isWindowsPath } from '../engine/paths.ts'
+import { TimeoutError, type CheckEvent, type Rule, type RuleContext, type Verdict } from '../engine/types.ts'
+import { sessionChanges } from './git.ts'
 
 const ID = 'tests-pass-before-done'
 const NPM_DEFAULT_TEST = /no test specified/
@@ -22,9 +22,8 @@ export async function testCommand(config: Record<string, unknown>, root: string,
  * argv that runs `command` through the platform shell. On Windows the command goes into a .cmd file:
  * passing it as one argument to cmd.exe breaks its quotes, because cmd does not read backslash escapes.
  */
-export async function shellFor(command: string, root: string, write: (p: string, t: string) => Promise<void>): Promise<string[]> {
+export async function shellFor(command: string, root: string, write: (p: string, t: string) => Promise<void>, script = `${root}/.c-check/run-tests.cmd`): Promise<string[]> {
   if (!isWindowsPath(root)) return ['sh', '-c', command]
-  const script = `${root}/.c-check/run-tests.cmd`
   await write(script, `@echo off\r\n${command}\r\nexit /b %errorlevel%\r\n`)
   return ['cmd.exe', '/d', '/c', script.replace(/\//g, '\\')]
 }
@@ -58,12 +57,12 @@ async function runTests(event: CheckEvent, { config, state, ports }: RuleContext
 
   // Verify enough, not more: nothing changed since session start or since the last green run, so tests need no rerun.
   const changes = await sessionChanges({ config, state, ports })
-  if (changes !== null && (changes.current.tree === changes.baseline.tree || changes.current.tree === state.lastGreenTree)) {
+  if (changes !== null && ((!state.explicitBaseline && changes.current.tree === changes.baseline.tree) || changes.current.tree === state.lastGreenTree)) {
     return { kind: 'allow', ruleId: ID, details: { skipped: 'no changes since last pass' } }
   }
 
   const timeoutSec = typeof config.timeoutSec === 'number' && config.timeoutSec > 0 ? config.timeoutSec : 300
-  const shell = await shellFor(command, event.projectRoot, ports.write)
+  const shell = await shellFor(command, event.projectRoot, ports.write, state.testScriptPath)
   let result
   try {
     result = await ports.run(shell, { cwd: event.projectRoot, timeoutMs: timeoutSec * 1000, env: { CI: '1' } })

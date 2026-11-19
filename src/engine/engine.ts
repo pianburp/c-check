@@ -1,8 +1,8 @@
-import { loadConfig } from '../config/config'
+import { loadConfig, type LoadedConfig } from '../config/config.ts'
 import type { Logger } from '../log/log'
-import { relativeTo } from './paths'
-import { filePathOf, isWriteTool, outputFailed } from './tools'
-import { TimeoutError, type CheckEvent, type Ports, type Rule, type RuleMode, type SessionState, type Verdict, type VerdictKind } from './types'
+import { relativeTo } from './paths.ts'
+import { filePathOf, isWriteTool, outputFailed } from './tools.ts'
+import { TimeoutError, type CheckEvent, type Ports, type Rule, type RuleMode, type SessionState, type Verdict, type VerdictKind } from './types.ts'
 
 export interface Outcome {
   kind: VerdictKind
@@ -16,7 +16,8 @@ export interface EngineDeps {
   rules: readonly Rule[]
   ports: Ports
   state: SessionState
-  logger: Logger
+  logger: Pick<Logger, 'write'>
+  loadedConfig?: LoadedConfig
 }
 
 export const gaveUpMessage = (tries: number): string => `c-check could not get this check to pass after ${tries} tries. A human should look at it.`
@@ -24,7 +25,7 @@ export const gaveUpMessage = (tries: number): string => `c-check could not get t
 /** Runs every rule that listens on the event's point and returns the combined, mode-applied verdict. Never throws. */
 export async function runEvent(event: CheckEvent, deps: EngineDeps): Promise<Outcome> {
   const { rules, ports, state, logger } = deps
-  const { config, warnings } = await loadConfig(event.projectRoot, ports)
+  const { config, warnings } = deps.loadedConfig ?? await loadConfig(event.projectRoot, ports)
   const pending: Promise<void>[] = []
   const log = (line: Parameters<Logger['write']>[0]) => {
     pending.push(logger.write(line, config.logDir))

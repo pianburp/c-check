@@ -1,0 +1,34 @@
+name: Codex hook capability probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --global @openai/codex@0.169.0
+      - name: Probe hook trust and continuation
+        shell: pwsh
+        run: |
+          $codexProbeEntrypoint = Join-Path (npm root -g) '@openai/codex/bin/codex.js'
+          node tests/codex-probe.mjs $codexProbeEntrypoint untrusted
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node tests/codex-probe.mjs $codexProbeEntrypoint pre-stop
+      - name: Probe the full patch lifecycle
+        shell: pwsh
+        run: |
+          $codexProbeEntrypoint = Join-Path (npm root -g) '@openai/codex/bin/codex.js'
+          node tests/codex-probe.mjs $codexProbeEntrypoint full
